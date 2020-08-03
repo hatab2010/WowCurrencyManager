@@ -12,6 +12,7 @@ using Discord;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http.Headers;
 using System.Reflection;
+using WowCurrencyManager.Room;
 
 namespace WowCurrencyManager
 {
@@ -38,8 +39,8 @@ namespace WowCurrencyManager
         {
             _client = new DiscordSocketClient();
             _commands = new CommandService();
-
-            _services = new ServiceCollection()
+                   
+            _services = new ServiceCollection()             
                 .AddSingleton(_client)
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
@@ -63,13 +64,28 @@ namespace WowCurrencyManager
         public async Task RegisterCommandsAsync()
         {
             _client.MessageReceived += HandleCommandAsync;
+            _client.ReactionAdded += HandleReactionAddedAsync;
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+        }
+
+        private Task HandleReactionAddedAsync(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
+        {
+
+            if (arg3.Emote.ToString() != "💰" 
+                || arg3.User.Value.IsBot)
+                return Task.CompletedTask;
+
+            var routing = RoomRouting.GetRoomRouting();
+            DiscordRoom room = routing.GetRoom(arg3.Channel.Name);
+
+            Console.WriteLine("ReactionAdd");
+            return Task.CompletedTask;
         }
 
         private async Task HandleCommandAsync(SocketMessage arg)
         {
             var message = arg as SocketUserMessage;
-            var context = new SocketCommandContext(_client, message);
+            var context = new SocketCommandContext(_client, message);            
 
             if (message.Author.IsBot) return;
 
