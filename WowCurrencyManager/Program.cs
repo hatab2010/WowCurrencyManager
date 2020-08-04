@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http.Headers;
 using System.Reflection;
 using WowCurrencyManager.Room;
+using Discord.Rest;
 
 namespace WowCurrencyManager
 {
@@ -45,7 +46,7 @@ namespace WowCurrencyManager
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
 
-            string token = "NzM5NjI1NzYyNDk5NTkyMjEy.XydMKw.QSV1OIegGrBn3WFRQUDI9ayWmro";
+            string token = "NzM5NjI1NzYyNDk5NTkyMjEy.XydMKw.6q1eMYNBohnPH-kfWq2W9Lr-Wwg";
 
             _client.Log += _client_Log;
 
@@ -69,16 +70,22 @@ namespace WowCurrencyManager
         }
 
         private Task HandleReactionAddedAsync(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
-        {
-
+        {            
             if (arg3.Emote.ToString() != "💰" 
                 || arg3.User.Value.IsBot)
-                return Task.CompletedTask;
+                return Task.CompletedTask;            
 
+            var before = arg1.GetOrDownloadAsync();
+            before.Wait();
             var routing = RoomRouting.GetRoomRouting();
-            DiscordRoom room = routing.GetRoom(arg3.Channel.Name);
+            DiscordRoom room = routing.GetRoom(arg2);
+            room.Order.SetPerformer(room.GetClient(arg3.User.Value));
 
-            Console.WriteLine("ReactionAdd");
+            before.Result.ModifyAsync(msg => msg.Embed = room.Order.GetOrderEmbed());
+            before.Result.RemoveAllReactionsAsync();
+
+            room.OrderSuccess();
+
             return Task.CompletedTask;
         }
 

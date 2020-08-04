@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using WowCurrencyManager.Model;
 using WowCurrencyManager.Room;
 
 namespace WowCurrencyManager.Modules
@@ -27,40 +28,13 @@ namespace WowCurrencyManager.Modules
 
             var routing = RoomRouting.GetRoomRouting();
 
-            var room = routing.GetRoom(Context.Channel.Name);
-            var client = room.GetClient(Context.User.Id, Context.User.Username);
+            var room = routing.GetRoom(Context.Channel);
+            var client = room.GetClient(Context.User);
 
             client.SetBalance(value);
             room.UpdateBalance();
 
-            EmbedBuilder builder = new EmbedBuilder();
-            builder.WithTitle("Баланс комнаты");
-
-            foreach (var item in room.Clients)
-            {
-                builder.AddField(item.Name, item.Balance, true);
-            }
-
-            builder.AddField("Общий баланс", room.Balance, false);
-            builder.WithColor(Color.Green);
-
-            var channelMessages = await Context.Channel.GetMessagesAsync(1, CacheMode.AllowDownload).LastAsync();
-
-            if (channelMessages.Count > 0
-                && room.LastBalanceMessage != null
-                && channelMessages.Last().Id == room.LastBalanceMessage.Id)
-            {
-                await room.LastBalanceMessage.ModifyAsync( msg => msg.Embed = builder.Build());
-            }
-            else if (room.LastBalanceMessage != null)
-            {
-                await Context.Channel.DeleteMessageAsync(room.LastBalanceMessage);
-                room.LastBalanceMessage = await Context.Channel.SendMessageAsync("", false, builder.Build());
-            }
-            else
-            {
-                room.LastBalanceMessage = await Context.Channel.SendMessageAsync("", false, builder.Build());
-            }
+            await room.SendBalanceMessage();
         }
 
         [Command("disable")]
@@ -69,7 +43,7 @@ namespace WowCurrencyManager.Modules
             await Context.Channel.DeleteMessageAsync(Context.Message);
             var routing = RoomRouting.GetRoomRouting();
 
-            var room = routing.GetRoom(Context.Channel.Name);
+            var room = routing.GetRoom(Context.Channel);
             room.RemoveClient(Context.User.Id);
         }
 
@@ -79,9 +53,22 @@ namespace WowCurrencyManager.Modules
         public async Task Order(int value)
         {
             await Context.Channel.DeleteMessageAsync(Context.Message);
+            var routing = RoomRouting.GetRoomRouting();
+
+            var room = routing.GetRoom(Context.Channel);
+
+            G2gOrder order = new G2gOrder()
+            {
+                Buyer = "Hacra",
+                Gold = value,
+                OrderId = 666666,
+                server = Context.Channel.Name
+            };
+
+            room.SetOrder(order);
 
             Emoji react = new Emoji("💰");
-            var message = await Context.Channel.SendMessageAsync($"Ордер на: {value}");
+            var message = await Context.Channel.SendMessageAsync("", false, order.GetOrderEmbed());
             
             await message.AddReactionAsync(react);
         }

@@ -1,5 +1,6 @@
 ﻿using Discord.Commands;
 using Discord.Rest;
+using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -13,7 +14,8 @@ namespace WowCurrencyManager.Room
     {
         public RestUserMessage LastBalanceInfoMessage;
         private static RoomRouting instance;
-        private List<DiscordRoom> _rooms = new List<DiscordRoom>();
+
+        private List<DiscordRoom> _rooms= new List<DiscordRoom>();
 
         public static RoomRouting GetRoomRouting()
         {
@@ -29,12 +31,12 @@ namespace WowCurrencyManager.Room
         //    var client = room.GetClient(context.User);
         //}
 
-        public DiscordRoom GetRoom(string channelName)
+        public DiscordRoom GetRoom(ISocketMessageChannel channel)
         {
-            var room = _rooms.FirstOrDefault(_ => _.Name == channelName);
+            var room = _rooms.FirstOrDefault(_ => _.Name == channel.Name);
             if (room == null)
             {
-                room = new DiscordRoom(channelName);
+                room = new DiscordRoom(channel);
                 _rooms.Add(room);
                 return room;
             }
@@ -44,5 +46,9 @@ namespace WowCurrencyManager.Room
             }
         }
 
+        public List<DiscordRoom> GetRooms()
+        {
+            return _rooms;
+        }
     }
 }
