@@ -18,10 +18,25 @@ namespace WowCurrencyManager.Room
 
     public class DiscordRoom
     {
+        public static Action<DiscordRoom> BalanceChanged;
+        public decimal _minLos { private set; get; }
+
         public ISocketMessageChannel Channel { private set; get; }
         public List<RoomClient> Clients = new List<RoomClient>();
+        private int _balance;
+
         public string Name => Channel.Name;
-        public int Balance { private set; get; }        
+        public int Balance
+        {
+            get => _balance;
+            private set
+            {
+                if (_balance != value)
+                {                   
+                    _balance = value;                   
+                }                
+            }                
+        }
         public RestUserMessage LastBalanceMessage { get; internal set; }
         public G2gOrder Order { private set; get; }
 
@@ -30,6 +45,11 @@ namespace WowCurrencyManager.Room
         public DiscordRoom(ISocketMessageChannel channel)
         {
             Channel = channel;
+        }
+
+        public void SetMinLos(decimal value)
+        {
+            _minLos = value;
         }
 
         public RoomClient GetClient(IUser user)
@@ -72,21 +92,23 @@ namespace WowCurrencyManager.Room
         }
 
         public void UpdateBalance()
-        {            
+        {
             int result = 0;
 
-            if (Clients == null || Clients.Count == 0)
+            if ((Clients == null || Clients.Count == 0) && Balance != 0)
             {
                 Balance = 0;
+                BalanceChanged?.Invoke(this);               
                 return;
             }
 
-            result = Clients.Sum(_ => _.Balance);
+            result = Clients.Sum(_ => _.Balance);            
 
             if (!IsOperationAllowed)
                 return;
 
             Balance = result;
+            BalanceChanged?.Invoke(this);
         }
 
         public async Task SendBalanceMessage()
@@ -109,9 +131,9 @@ namespace WowCurrencyManager.Room
             }
             else
             {
-                IsOperationAllowed = true;
+                IsOperationAllowed = true;      //Разрешить операции
                 builder.WithColor(Color.Green);
-            }           
+            }
 
             var channelMessages = await Channel.GetMessagesAsync(1, CacheMode.AllowDownload).LastAsync();
 
@@ -136,7 +158,7 @@ namespace WowCurrencyManager.Room
         {
             //TODO selenium
 
-            
+
         }
 
         public void OrderSuccess()

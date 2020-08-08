@@ -25,12 +25,6 @@ namespace WowCurrencyManager.Room
             return instance;
         }
 
-        //internal void SetBalance(SocketCommandContext context)
-        //{
-        //    var room = GetRoom(context.Channel.Name);
-        //    var client = room.GetClient(context.User);
-        //}
-
         public DiscordRoom GetRoom(ISocketMessageChannel channel)
         {
             var room = _rooms.FirstOrDefault(_ => _.Name == channel.Name);

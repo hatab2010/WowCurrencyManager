@@ -14,6 +14,7 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using WowCurrencyManager.Room;
 using Discord.Rest;
+using WowCurrencyManager.WebDriver;
 
 namespace WowCurrencyManager
 {
@@ -38,6 +39,8 @@ namespace WowCurrencyManager
 
         public async Task RunBotAsync()
         {
+            WebManager.InitManager();
+
             _client = new DiscordSocketClient();
             _commands = new CommandService();
                    
