@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -58,22 +59,43 @@ namespace WowCurrencyManager.WebDriver
     //    }
     //}
 
+    public class WaitOrder : IOperation
+    {
+        private IWebDriver _driver;
+        static Stopwatch _lastWatchTime = new Stopwatch();
+        public DiscordRoom Sender { private set; get; }
+        private string _url = "https://www.g2g.com/order/sellOrder?status=5";
+
+        public void Start(IWebDriver driver)
+        {
+            _driver = driver;
+
+            if (driver.Url != _url)
+            {
+                Update();
+            }
+
+            if (_lastWatchTime.ElapsedMilliseconds > 60000)
+            {
+                Update();
+            }
+            else
+            {
+                Thread.Sleep(1000);
+            }
+
+            _driver.FindElement()            
+        }
+
+        private void Update()
+        {
+            _lastWatchTime.Restart();
+            _driver.Navigate().GoToUrl(_url);
+        }
+    }
+
     public class EditOrderOperaion : IOperation
     {
-        //public int Balance { private set; get; }
-
-        //public Action<IWebDriver> Start => throw new NotImplementedException();
-
-        //public EditOrderOperaion(DiscordRoom sender)
-        //{
-        //    Url = "";
-        //    Sender = sender;
-        //}
-
-        //void IOperation.Start(IWebDriver driver)
-        //{
-        //    throw new NotImplementedException();
-        //}
         public DiscordRoom Sender { private set; get; }
 
         public EditOrderOperaion(DiscordRoom room)
@@ -136,27 +158,18 @@ namespace WowCurrencyManager.WebDriver
             }
 
             //Finde room order
-            var OrderEl = new Products(driver, server, fraction);
-            var Orders = driver.WaitElements(By.ClassName("manage__table-row"));
-
-            foreach (var parentEL in Orders)
+            var order = driver.GetProductsEl(server, fraction);
+            order.SetAmount(Sender.Balance);
+            if (lowPriceVlue > Sender._minLos)
             {
-                var serverName = parentEL.FindElement(By.ClassName("products__name")).Text;
-                var formatLabel = Regex.Replace(serverName, "[’]", "").ToLower();
-
-                var isCurrent = Regex.IsMatch(formatLabel, $@"{server} \[\w*\] - {fraction}");
-
-                if (isCurrent)
-                {
-                    parentEL.FindElement(By.ClassName("g2g_actual_quantit")).Click();
-
-                    var StockInput = driver.WaitElement(By.CssSelector(".editable-input > input"));
-                    StockInput.Clear();
-                    StockInput.SendKeys(Sender.Balance.ToString());
-                    break;
-                }
+                order.SetPrice(lowPriceVlue);
             }
-
+            else
+            {
+                order.SetPrice(Sender._minLos);
+            }
+            
+            //var Orse = new Products(,);
             void selectOption(IWebElement handler, string selectItem)
             {
                 var curServer = Regex.Replace(handler.Text, "[’]", "");
@@ -235,6 +248,10 @@ namespace WowCurrencyManager.WebDriver
                 }
                 else
                 {
+                    lock (_opertions)
+                    {
+                        _opertions.Add(new WaitOrder());
+                    }
 
                 }                
             }
@@ -247,8 +264,6 @@ namespace WowCurrencyManager.WebDriver
 
         private void OnBalanceChanged(DiscordRoom room)
         {
-            if (room.Balance < 400) return;
-
             var prevBalanceOperation = _opertions.FirstOrDefault(_ => _.Sender == room && _ is EditOrderOperaion);
 
             if (prevBalanceOperation == null)

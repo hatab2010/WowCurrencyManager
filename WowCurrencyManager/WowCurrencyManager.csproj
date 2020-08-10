@@ -101,6 +101,7 @@
     <Compile Include="Room\RoomRouting.cs" />
     <Compile Include="WebDriver\WebManager.cs" />
     <Compile Include="WebElement\PinnedElement.cs" />
+    <Compile Include="WebElement\Products.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

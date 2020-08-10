@@ -41,6 +41,11 @@ namespace WowCurrencyManager
             return new PinnedElement(driver, findeOption);
         }
 
+        public static Products GetProductsEl(this IWebDriver driver, string server, string fraction)
+        {
+            return new Products(driver, server, fraction);
+        }
+
         public static void WaitToRefrash(this IWebDriver driver)
         {
             var overScreenClass = "CustomeOverscreen654687";

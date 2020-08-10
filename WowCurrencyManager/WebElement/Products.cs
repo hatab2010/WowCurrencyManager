@@ -15,6 +15,7 @@ namespace WowCurrencyManager.WebElement
         private IWebDriver _driver;
         private string _server;
         private string _fraction;
+        private int _reserved;
 
         private IWebElement _instance;
 
@@ -25,6 +26,10 @@ namespace WowCurrencyManager.WebElement
             _fraction = fraction;
 
             findEl();
+
+            var reservedEl = _instance.FindElement(By.XPath("//span[contains(@class, 'products__description-title') " +
+                "and contains(text(), 'Reserved')]/..//span[contains(@class, 'products__description-info')]"));
+            _reserved = int.Parse(reservedEl.Text);
         }
 
         void findEl()
@@ -33,7 +38,16 @@ namespace WowCurrencyManager.WebElement
 
             foreach (var parentEL in Orders)
             {
-                var serverName = parentEL.FindElement(By.ClassName("products__name")).Text;
+                string serverName;
+                try
+                {
+                    serverName = parentEL.FindElement(By.ClassName("products__name")).Text;
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+                
                 var formatLabel = Regex.Replace(serverName, "[’]", "").ToLower();
 
                 var isCurrent = Regex.IsMatch(formatLabel, $@"{_server} \[\w*\] - {_fraction}");
@@ -41,11 +55,6 @@ namespace WowCurrencyManager.WebElement
                 if (isCurrent)
                 {
                     _instance = parentEL;
-                    //parentEL.FindElement(By.ClassName("g2g_actual_quantit")).Click();
-
-                    //var StockInput = _driver.WaitElement(By.CssSelector(".editable-input > input"));
-                    //StockInput.Clear();
-                    //StockInput.SendKeys(Sender.Balance.ToString());
                     break;
                 }
             }
@@ -78,33 +87,90 @@ namespace WowCurrencyManager.WebElement
         public bool CheckActive()
         {
             bool isActive = false;
-            Interaction((el) =>
-            {
-                var redButoons = el.FindElements(By.CssSelector(".manage-listing__actions-list a"));
+            var visibleButtons = GetOrderStateActionButtons();
 
-                foreach (var item in redButoons)
-                {
-                    if (item.Text.Contains("Deactivate"))
-                        isActive = true;
-                }
-            });
+            isActive = visibleButtons.FirstOrDefault(_ => _.Text == "Deactivate") != null;
 
             return isActive;
         }
 
-        public void SetAmount(int value)
+        public void SetPrice(decimal value)
         {
             Interaction((el) =>
             {
-                var stockButton = _instance.FindElement(By.ClassName("g2g_actual_quantity "));
-                stockButton.Click();
+                var priceButton = el.FindElement(By.ClassName("g2g_products_price"));
+                priceButton.Click();
 
-                var StockInput = _driver.WaitElement(By.CssSelector(".editable-input > input"));
-                StockInput.Clear();
-                StockInput.SendKeys(value.ToString());
-
-                _driver.FindElement(By.CssSelector("btn.btn--green.editable-submit")).Click;
+                var input = _driver.WaitElement(By.ClassName("input-large"));
+                input.Clear();
+                input.SendKeys(value.ToString().Replace(",", "."));
+                _driver.FindElement(By.CssSelector(".btn.btn--green.editable-submit")).Click();
             });
+        }
+
+        public void SetAmount(int value)
+        {
+            if (value > 400)
+            {
+                SetStateOrder(true);
+
+                Interaction((el) =>
+                {
+                    var stockButton = _instance.FindElement(By.ClassName("g2g_actual_quantity"));
+                    stockButton.Click();
+
+                    var StockInput = _driver.WaitElement(By.CssSelector(".editable-input > input"));
+                    StockInput.Clear();
+                    StockInput.SendKeys((value + _reserved).ToString());
+
+                    _driver.FindElement(By.CssSelector(".btn.btn--green.editable-submit")).Click();
+                });
+            }
+            else
+            {
+                SetStateOrder(false);
+            }
+        }
+
+        private void SetStateOrder(bool isActive)
+        {
+            if (isActive)
+            {
+                var curState = CheckActive();
+
+                if (!curState)
+                { 
+                    var relistButton = GetOrderStateActionButtons().First(_=>_.Text == "Relist");
+                    relistButton.Click();
+                    _driver.FindElement(By.CssSelector(".btn.btn--green.product-action-page")).Click();
+                }
+            }
+            else
+            {
+                var curState = CheckActive();
+
+                if (curState == true)
+                {
+                    if (curState)
+                    {
+                        var relistButton = GetOrderStateActionButtons().First(_ => _.Text == "Deactivate");
+                        relistButton.Click();
+                        _driver.FindElement(By.CssSelector(".btn.btn--green.product-action-page")).Click();
+                    }
+                    return;
+                }
+            }
+        }
+
+        private IReadOnlyCollection<IWebElement> GetOrderStateActionButtons()
+        {
+            IReadOnlyCollection<IWebElement> buttons = null;
+            Interaction((el) => 
+            {
+                buttons = el.FindElements(By.CssSelector(".manage-listing__actions-list a"));
+            });
+
+            return buttons;
         }
     }
 }
