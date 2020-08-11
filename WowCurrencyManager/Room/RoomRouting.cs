@@ -15,7 +15,7 @@ namespace WowCurrencyManager.Room
         public RestUserMessage LastBalanceInfoMessage;
         private static RoomRouting instance;
 
-        private List<DiscordRoom> _rooms= new List<DiscordRoom>();
+        public List<DiscordRoom> Rooms { private set; get; } = new List<DiscordRoom>();
 
         public static RoomRouting GetRoomRouting()
         {
@@ -25,13 +25,14 @@ namespace WowCurrencyManager.Room
             return instance;
         }
 
+        //TODO убрать создание комнаты. Гет метод неяяно меняет состояние объекта
         public DiscordRoom GetRoom(ISocketMessageChannel channel)
         {
-            var room = _rooms.FirstOrDefault(_ => _.Name == channel.Name);
+            var room = Rooms.FirstOrDefault(_ => _.Name == channel.Name);
             if (room == null)
             {
                 room = new DiscordRoom(channel);
-                _rooms.Add(room);
+                Rooms.Add(room);
                 return room;
             }
             else
@@ -42,7 +43,7 @@ namespace WowCurrencyManager.Room
 
         public List<DiscordRoom> GetRooms()
         {
-            return _rooms;
+            return Rooms;
         }
     }
 }

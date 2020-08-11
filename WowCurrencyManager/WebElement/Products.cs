@@ -26,10 +26,6 @@ namespace WowCurrencyManager.WebElement
             _fraction = fraction;
 
             findEl();
-
-            var reservedEl = _instance.FindElement(By.XPath("//span[contains(@class, 'products__description-title') " +
-                "and contains(text(), 'Reserved')]/..//span[contains(@class, 'products__description-info')]"));
-            _reserved = int.Parse(reservedEl.Text);
         }
 
         void findEl()
@@ -57,7 +53,14 @@ namespace WowCurrencyManager.WebElement
                     _instance = parentEL;
                     break;
                 }
+           
             }
+
+            var reservedEl = _instance.FindElements(By.ClassName("products__description-item"))
+                    .FirstOrDefault(_ => _.Text.Contains("Reserved"))
+                    .FindElement(By.ClassName("products__description-info"));
+
+            _reserved = int.Parse(reservedEl.Text);
         }
 
         private void Interaction(Action<IWebElement> action)
@@ -103,7 +106,8 @@ namespace WowCurrencyManager.WebElement
 
                 var input = _driver.WaitElement(By.ClassName("input-large"));
                 input.Clear();
-                input.SendKeys(value.ToString().Replace(",", "."));
+                var resukt = value - (decimal)0.00001;
+                input.SendKeys((resukt).ToString().Replace(",", "."));
                 _driver.FindElement(By.CssSelector(".btn.btn--green.editable-submit")).Click();
             });
         }

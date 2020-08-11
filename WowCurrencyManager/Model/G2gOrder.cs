@@ -5,9 +5,10 @@ namespace WowCurrencyManager.Model
 {
     public class G2gOrder
     {
-        public int OrderId;
-        public string server;
-        public int Gold;
+        public string OrderId;
+        public string Server;
+        public string Fraction;
+        public int Amount;
         public string Buyer;
         public RoomClient Performer;
 
@@ -20,10 +21,11 @@ namespace WowCurrencyManager.Model
         {
             var builder = new EmbedBuilder();             
 
-            builder.WithTitle(server);
-            builder.AddField("OrderId", OrderId, true);
-            builder.AddField("Gold", Gold, true);
-            builder.AddField("Buyer", Buyer, true);            
+            builder.WithTitle(Server);
+            builder.AddField("OrderId", OrderId, false);
+            builder.AddField("Gold", Amount, false);
+            builder.AddField("Buyer", Buyer, false);
+            builder.WithThumbnailUrl("https://cdn.discordapp.com/attachments/742113122592227450/742723748485922826/hideaway-logo-final-flat-max.jpg");
 
             if (Performer != null)
             {

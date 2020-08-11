@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using WowCurrencyManager.Model;
 
@@ -24,21 +25,40 @@ namespace WowCurrencyManager.Room
         public ISocketMessageChannel Channel { private set; get; }
         public List<RoomClient> Clients = new List<RoomClient>();
         private int _balance;
+        private G2gOrder _order;
 
         public string Name => Channel.Name;
+        public string Server => Regex.Replace(Name.Split('-')[0], "[_]", " ").ToLower();
+        public string Fraction => Channel.Name.Split('-')[2].ToLower();
         public int Balance
         {
             get => _balance;
             private set
             {
                 if (_balance != value)
-                {                   
-                    _balance = value;                   
-                }                
-            }                
+                {
+                    _balance = value;
+                }
+            }
         }
+
         public RestUserMessage LastBalanceMessage { get; internal set; }
-        public G2gOrder Order { private set; get; }
+        public G2gOrder Order
+        {
+            get => _order;
+            private set
+            { 
+                if (value != _order)
+                {
+                    if (value != null)
+                    {
+                        SenOrderInChannle(value);
+                    }
+
+                    _order = value;
+                }
+            }
+        }
 
         public bool IsOperationAllowed { private set; get; } = true;
 
@@ -98,11 +118,11 @@ namespace WowCurrencyManager.Room
             if ((Clients == null || Clients.Count == 0) && Balance != 0)
             {
                 Balance = 0;
-                BalanceChanged?.Invoke(this);               
+                BalanceChanged?.Invoke(this);
                 return;
             }
 
-            result = Clients.Sum(_ => _.Balance);            
+            result = Clients.Sum(_ => _.Balance);
 
             if (!IsOperationAllowed)
                 return;
@@ -111,11 +131,19 @@ namespace WowCurrencyManager.Room
             BalanceChanged?.Invoke(this);
         }
 
+        public async void SenOrderInChannle(G2gOrder order)
+        {
+            Emoji react = new Emoji("💰");
+            var message = await Channel.SendMessageAsync("", false, order.GetOrderEmbed());
+
+            await message.AddReactionAsync(react);
+        }
+
         public async Task SendBalanceMessage()
         {
             EmbedBuilder builder = new EmbedBuilder();
 
-            builder.WithTitle("Баланс сервера");
+            builder.WithTitle($"Баланс {Server}"); 
 
             foreach (var item in Clients)
             {
@@ -157,16 +185,14 @@ namespace WowCurrencyManager.Room
         public void OrderAccepted()
         {
             //TODO selenium
-
-
         }
 
         public void OrderSuccess()
         {
             //TODO selenium
 
-            var operationResult = Order.Performer.Balance - Order.Gold;
-            Balance -= Order.Gold;
+            var operationResult = Order.Performer.Balance - Order.Amount;
+            Balance -= Order.Amount;
 
             if (operationResult >= 0)
             {

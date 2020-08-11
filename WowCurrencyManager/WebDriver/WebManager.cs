@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -84,7 +85,112 @@ namespace WowCurrencyManager.WebDriver
                 Thread.Sleep(1000);
             }
 
-            _driver.FindElement()            
+            try
+            {
+                //Open new order
+                var newOrders = driver.FindElements(By.ClassName("sales-history__table-row-unread"));
+
+                //Check for room exist
+                var root = RoomRouting.GetRoomRouting();
+
+                IWebElement currentOrder = null;
+                DiscordRoom currentRoom = null;
+
+                foreach (var el in newOrders)
+                {
+                    foreach (var room in root.Rooms)
+                    {
+                        var formatedLabel = Regex.Replace(el.FindElement(By.ClassName("sales-history__product-name")).Text.ToLower(), "[’]", "");
+
+                        if (formatedLabel.Contains(room.Server) && formatedLabel.Contains(room.Fraction))
+                        {
+                            currentOrder = el;
+                            currentRoom = room;
+
+                            goto RoomExist;
+                        };
+                        
+                    }
+                }
+
+                return;
+
+                RoomExist:
+
+                var operationLink = currentOrder.FindElement(By.ClassName("sales-history__product-id"));
+                operationLink.Click();
+
+                //View order details
+                driver.WaitElement(By.ClassName("progress_gr"))
+                    .Click();
+
+                //Parse order info
+                var orderServer = driver.WaitElement(By.XPath(BuildXpathString("Server"))).Text;
+                var fraction = driver.FindElement(By.XPath(BuildXpathString("Faction"))).Text;
+                var buyer = driver.FindElement(By.ClassName("seller__name")).Text;
+
+                var OrderNumberEl = driver.FindElement(By.CssSelector(".trade__order__top-num span"));
+                var orderNumber = Regex.Match(OrderNumberEl.Text, @"№\d*").Value;
+                var amount = int.Parse(driver.FindElement(By.XPath("//td[@class = 'sales-history__table-quantity' and contains(@data-th, 'QTY.')]")).Text);
+
+                string BuildXpathString(string fieldName)
+                {
+                    return $"//span[contains(@class, 'game-info__title') and contains(text(), '{fieldName}')]/../span[contains(@class, 'game-info__info')]";
+                }
+
+                driver.WaitElement(By.XPath("//a[contains(@class, 'progress_gr') and contains(text(), 'Start Trading')]"))
+                    .Click();
+
+                //TODO проверить на принятие ордера
+                driver.WaitElement(By.ClassName("trade__field-input")).SendKeys(amount.ToString());
+
+                //Create order in discord room
+                var myOrder = new Model.G2gOrder()
+                {
+                    Buyer = buyer,
+                    OrderId = orderNumber,
+                    Amount = amount,
+                    Server = orderServer,
+                    Fraction = fraction
+                };
+
+                currentRoom.SetOrder(myOrder);
+
+                while (myOrder.Performer == null)
+                {
+                    Thread.Sleep(500);
+                    //TODO добавить выход из цикла, если никто не примет ордер
+                }
+                
+                driver.WaitElement(By.CssSelector(".list-action.trade__list-action3 a")).Click();
+
+                var okButton = driver.WaitElement(By.CssSelector(".btn.trade-history__btn"));
+
+                while (!okButton.Displayed)
+                {
+                    Thread.Sleep(300);
+                }
+
+                okButton.Click();
+
+                var messageButton = driver.WaitElement(By.XPath("//a[contains(@target, 'g2gcw') and contains(@class, 'list-action__btn-default')]"));
+                var chatUrl = messageButton.GetAttribute("href");
+                driver.Navigate().GoToUrl(chatUrl);
+
+                //Send message to byer
+                var messageStr = "hello friend, gold sent expect 1 hour and get your order please " +
+                    "give a good rating and follow me we have the fastest delivery and cheaper gold, 200% " +
+                    "safe gold, handmade. We do not buy gold on other sites or from other sellers! even if" +
+                    " gold is not available, you can write to us and we completed your order as soon as possible" +
+                    "waiting for you again ";
+
+                driver.WaitElement(By.TagName("textarea")).SendKeys(messageStr);
+                driver.WaitElement(By.TagName("textarea")).SendKeys(Keys.Enter);                
+            }
+            catch (Exception)
+            {
+                
+            }    
         }
 
         private void Update()
@@ -110,7 +216,6 @@ namespace WowCurrencyManager.WebDriver
 
             var parseStrgs = name.Split('-');
 
-            var server = Regex.Replace(parseStrgs[0], "[_]", " ").ToLower();
             var worldPart = $"[{parseStrgs[1]}]".ToLower();
             var fraction = parseStrgs[2].ToLower();
 
@@ -125,7 +230,16 @@ namespace WowCurrencyManager.WebDriver
                     break;
             }
 
-            selectOption(driver.WaitElement(By.CssSelector("#select2-server-container")), server);
+            var currentCurrencyLavel = driver.FindElement(By.ClassName("header__country-text"));
+
+            //if (currentCurrencyLavel.Text.Contains("EUR"))
+            //{
+            //    var inCur = driver.WaitElement(By.Id("reg_cur"));
+            //    inCur.Click();
+            //    inCur
+            //}
+
+            selectOption(driver.WaitElement(By.CssSelector("#select2-server-container")), Sender.Server);
             selectOption(driver.WaitElement(By.CssSelector("#select2-faction-container")), fraction);
 
             var sortetLinkEl = driver.GetPinnedElement(By.CssSelector(".sort__link"));
@@ -158,7 +272,17 @@ namespace WowCurrencyManager.WebDriver
             }
 
             //Finde room order
-            var order = driver.GetProductsEl(server, fraction);
+            Products order = null;
+
+            try
+            {
+                order = driver.GetProductsEl(Sender.Server, fraction);                
+            }
+            catch (Exception)
+            {
+                return;
+            }
+
             order.SetAmount(Sender.Balance);
             if (lowPriceVlue > Sender._minLos)
             {
@@ -295,6 +419,15 @@ namespace WowCurrencyManager.WebDriver
             options.AddArgument($"--user-data-dir={dataPath}");
             _driver = new ChromeDriver(options);
             _driver.Manage().Timeouts().ImplicitWait = new TimeSpan(15000);
+            _driver.Navigate().GoToUrl("https://www.g2g.com/order/sellOrder?status=5");
+
+            while (true)
+            {
+                Thread.Sleep(5000);
+                if (!_driver.Url.Contains("login") || !_driver.Url.Contains("sso/device"))
+                    break;
+            }
+
         }
     }
 

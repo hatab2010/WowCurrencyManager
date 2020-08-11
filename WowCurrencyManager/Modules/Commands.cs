@@ -47,6 +47,18 @@ namespace WowCurrencyManager.Modules
             room.RemoveClient(Context.User.Id);
         }
 
+        [Command("Minimal")]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task Minimal(decimal value)
+        {
+            await Context.Channel.DeleteMessageAsync(Context.Message);
+            var routing = RoomRouting.GetRoomRouting();
+
+            var room = routing.GetRoom(Context.Channel);
+            room.SetMinLos(value);
+        }
+
         [Command("Order")]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -60,9 +72,9 @@ namespace WowCurrencyManager.Modules
             G2gOrder order = new G2gOrder()
             {
                 Buyer = "Hacra",
-                Gold = value,
-                OrderId = 666666,
-                server = Context.Channel.Name
+                Amount = value,
+                OrderId = "№5133842",
+                Server = Context.Channel.Name
             };
 
             room.SetOrder(order);

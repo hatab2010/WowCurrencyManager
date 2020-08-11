@@ -20,17 +20,6 @@ namespace WowCurrencyManager
 {
     class Program
     {
-        //static IWebDriver _driver;
-        //static string dataPath = $"{Directory.GetCurrentDirectory()}/Data";
-
-        //static void Main(string[] args)
-        //{
-        //    var options = new ChromeOptions();
-        //    options.AddArgument($"--user-data-dir={dataPath}");
-
-        //    _driver = new ChromeDriver(options);
-        //}
-
         static void Main(string[] args) => new Program().RunBotAsync().GetAwaiter().GetResult();
 
         private DiscordSocketClient _client;
@@ -49,7 +38,7 @@ namespace WowCurrencyManager
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
 
-            string token = "NzM5NjI1NzYyNDk5NTkyMjEy.XydMKw.9xSXpG6m3nHAgI4CdMwNHO7yAvI";
+            string token = "NzM5NjI1NzYyNDk5NTkyMjEy.XydMKw.8v_fJNiq_k5qOQqsmgWFfZCn85k";
 
             _client.Log += _client_Log;
 
@@ -73,19 +62,24 @@ namespace WowCurrencyManager
         }
 
         private Task HandleReactionAddedAsync(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
-        {            
-            if (arg3.Emote.ToString() != "💰" 
+        {
+            if (arg3.Emote.ToString() != "💰"
                 || arg3.User.Value.IsBot)
                 return Task.CompletedTask;            
 
-            var before = arg1.GetOrDownloadAsync();
-            before.Wait();
+            var lMessage = arg1.GetOrDownloadAsync();
+            lMessage.Wait();
             var routing = RoomRouting.GetRoomRouting();
-            DiscordRoom room = routing.GetRoom(arg2);
-            room.Order.SetPerformer(room.GetClient(arg3.User.Value));
+            DiscordRoom room = routing.GetRoom(arg2);            
 
-            before.Result.ModifyAsync(msg => msg.Embed = room.Order.GetOrderEmbed());
-            before.Result.RemoveAllReactionsAsync();
+            if (room.Order.Performer != null)
+            {
+                return Task.CompletedTask;
+            }
+
+            room.Order.SetPerformer(room.GetClient(arg3.User.Value));
+            lMessage.Result.ModifyAsync(msg => msg.Embed = room.Order.GetOrderEmbed());
+            lMessage.Result.RemoveAllReactionsAsync();
 
             room.OrderSuccess();
 
