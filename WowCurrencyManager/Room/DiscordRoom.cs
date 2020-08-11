@@ -3,10 +3,12 @@ using Discord.Rest;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using WowCurrencyManager.Model;
 
@@ -20,16 +22,33 @@ namespace WowCurrencyManager.Room
     public class DiscordRoom
     {
         public static Action<DiscordRoom> BalanceChanged;
-        public decimal _minLos { private set; get; }
+
+        public string Name => Channel.Name;
+        public string Server => Regex.Replace(Name.Split('-')[0], "[_]", " ").ToLower();
+        public string Fraction => Channel.Name.Split('-')[2].ToLower();
+        public string WordPart => Channel.Name.Split('-')[1].ToLower();        
+        public decimal MinLos 
+        { 
+            get => _minLos;
+            private set 
+            { 
+                if (_minLos != value)
+                {
+                    BalanceChanged?.Invoke(this);
+                }
+                _minLos = value; 
+            }
+        }
+        public int UpdateMinutes = 30;
 
         public ISocketMessageChannel Channel { private set; get; }
         public List<RoomClient> Clients = new List<RoomClient>();
         private int _balance;
         private G2gOrder _order;
+        private Stopwatch _lLastUpdate;
+        private decimal _minLos;
 
-        public string Name => Channel.Name;
-        public string Server => Regex.Replace(Name.Split('-')[0], "[_]", " ").ToLower();
-        public string Fraction => Channel.Name.Split('-')[2].ToLower();
+
         public int Balance
         {
             get => _balance;
@@ -47,7 +66,7 @@ namespace WowCurrencyManager.Room
         {
             get => _order;
             private set
-            { 
+            {
                 if (value != _order)
                 {
                     if (value != null)
@@ -64,12 +83,28 @@ namespace WowCurrencyManager.Room
 
         public DiscordRoom(ISocketMessageChannel channel)
         {
+            _lLastUpdate = new Stopwatch();
+            _lLastUpdate.Start();
+            Task.Run(WathToUpdate);
             Channel = channel;
+        }
+
+        private void WathToUpdate()
+        {
+            while (true)
+            {
+                Thread.Sleep(1000);
+                if (_lLastUpdate.ElapsedMilliseconds > UpdateMinutes * 60)
+                {
+                    BalanceChanged?.Invoke(this);
+                    _lLastUpdate.Restart();
+                }
+            }
         }
 
         public void SetMinLos(decimal value)
         {
-            _minLos = value;
+            MinLos = value;
         }
 
         public RoomClient GetClient(IUser user)
@@ -111,6 +146,20 @@ namespace WowCurrencyManager.Room
             SendBalanceMessage().Wait();
         }
 
+        public void RemoveAll()
+        {
+            var deleteClients = Clients;
+
+            foreach (var item in deleteClients)
+            {
+                Clients.Remove(item);
+            }
+
+            IsOperationAllowed = true;
+            UpdateBalance();
+            SendBalanceMessage().Wait();            
+        }
+
         public void UpdateBalance()
         {
             int result = 0;
@@ -143,7 +192,7 @@ namespace WowCurrencyManager.Room
         {
             EmbedBuilder builder = new EmbedBuilder();
 
-            builder.WithTitle($"Баланс {Server}"); 
+            builder.WithTitle($"Баланс {Server.ToUppercase()} [{WordPart}] {Fraction}");
 
             foreach (var item in Clients)
             {

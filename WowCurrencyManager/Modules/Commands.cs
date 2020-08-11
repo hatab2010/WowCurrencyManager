@@ -37,6 +37,16 @@ namespace WowCurrencyManager.Modules
             await room.SendBalanceMessage();
         }
 
+        [Command("wipe")]
+        public async Task Wipe()
+        {
+            await Context.Channel.DeleteMessageAsync(Context.Message);
+            var routing = RoomRouting.GetRoomRouting();
+
+            var room = routing.GetRoom(Context.Channel);
+            room.RemoveAll();                       
+        }
+
         [Command("disable")]
         public async Task Disable()
         {
@@ -47,7 +57,7 @@ namespace WowCurrencyManager.Modules
             room.RemoveClient(Context.User.Id);
         }
 
-        [Command("Minimal")]
+        [Command("minimal")]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task Minimal(decimal value)
@@ -59,30 +69,42 @@ namespace WowCurrencyManager.Modules
             room.SetMinLos(value);
         }
 
-        [Command("Order")]
+        [Command("update")]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [RequireUserPermission(GuildPermission.Administrator)]
-        public async Task Order(int value)
+        public async Task Update(int value)
         {
             await Context.Channel.DeleteMessageAsync(Context.Message);
             var routing = RoomRouting.GetRoomRouting();
 
             var room = routing.GetRoom(Context.Channel);
-
-            G2gOrder order = new G2gOrder()
-            {
-                Buyer = "Hacra",
-                Amount = value,
-                OrderId = "№5133842",
-                Server = Context.Channel.Name
-            };
-
-            room.SetOrder(order);
-
-            Emoji react = new Emoji("💰");
-            var message = await Context.Channel.SendMessageAsync("", false, order.GetOrderEmbed());
-            
-            await message.AddReactionAsync(react);
+            room.UpdateMinutes = value;
         }
+
+        //[Command("order")]
+        //[RequireBotPermission(ChannelPermission.ManageMessages)]
+        //[RequireUserPermission(GuildPermission.Administrator)]
+        //public async Task Order(int value)
+        //{
+        //    await Context.Channel.DeleteMessageAsync(Context.Message);
+        //    var routing = RoomRouting.GetRoomRouting();
+
+        //    var room = routing.GetRoom(Context.Channel);
+
+        //    G2gOrder order = new G2gOrder()
+        //    {
+        //        Buyer = "Hacra",
+        //        Amount = value,
+        //        OrderId = "№5133842",
+        //        Server = Context.Channel.Name
+        //    };
+
+        //    room.SetOrder(order);
+
+        //    Emoji react = new Emoji("💰");
+        //    var message = await Context.Channel.SendMessageAsync("", false, order.GetOrderEmbed());
+            
+        //    await message.AddReactionAsync(react);
+        //}
     }
 }

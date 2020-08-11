@@ -13,6 +13,16 @@ namespace WowCurrencyManager
     {
         static int _time;
 
+        public static string ToUppercase(this string value)
+        {
+            var builder = new StringBuilder();
+            var firstChar = value[0];
+            var other = value.Remove(value[0]);
+            builder.Append(firstChar.ToString().ToUpper());
+            builder.Append(other);
+            return builder.ToString();
+        }
+
         public static IWebElement WaitElement(this IWebDriver driver, By findeOption)
         {
             var timer = 15000;
