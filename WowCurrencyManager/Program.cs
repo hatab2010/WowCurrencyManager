@@ -38,7 +38,7 @@ namespace WowCurrencyManager
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
 
-            string token = "NzM5NjI1NzYyNDk5NTkyMjEy.XydMKw.8v_fJNiq_k5qOQqsmgWFfZCn85k";
+            string token = "";
 
             _client.Log += _client_Log;
             await RegisterCommandsAsync();

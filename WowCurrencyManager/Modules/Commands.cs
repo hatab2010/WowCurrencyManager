@@ -17,13 +17,30 @@ namespace WowCurrencyManager.Modules
     [RequireGuild("Финансы")]
     [RequireBotPermission(ChannelPermission.ManageMessages)]
     public class FinanceCommands : ModuleBase<SocketCommandContext>
-    {      
-        [Command("pay")]
-        public async Task Pay() 
+    {
+        [Command("ыуе")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task Pay()
         {
             await Context.Message.DeleteAsync();
             var room = RouteRoom();
             var embedTickets = room.PayOperation();
+
+            foreach (var item in embedTickets)
+            {
+                await Context.Channel.SendMessageAsync("", false, item);
+            }
+        }
+
+        [Command("Add")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task Pay(string command) 
+        {
+            await Context.Message.DeleteAsync();
+            var room = RouteRoom();
+            var embedTickets = room.PayOperation();
+
+            var user = Context.Channel.GetUsersAsync();
 
             foreach (var item in embedTickets)
             {
@@ -129,13 +146,26 @@ namespace WowCurrencyManager.Modules
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task Minimal(decimal value)
-        {
+        {           
+
             await Context.Channel.DeleteMessageAsync(Context.Message);
             var routing = RoomRouting.GetRoomRouting();
-
             var room = routing.GetRoom(Context.Channel);
-            room.SetMinLos(value);
-            await room.SendBalanceMessage();
+            var embed = room.SetMinLos(value);
+            await Context.User.SendMessageAsync("", false, embed);
+        }
+
+        [Command("minimal")]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task Minimal()
+        {
+
+            await Context.Channel.DeleteMessageAsync(Context.Message);
+            var routing = RoomRouting.GetRoomRouting();
+            var room = routing.GetRoom(Context.Channel);
+            var embed = room.GetMinimalPriceEmbed();
+            await Context.User.SendMessageAsync("", false, embed);
         }
 
         [Command("update")]        
@@ -153,31 +183,31 @@ namespace WowCurrencyManager.Modules
 
         // Inherit from PreconditionAttribute       
 
-        //[Command("order")]
-        //[RequireBotPermission(ChannelPermission.ManageMessages)]
-        //[RequireUserPermission(GuildPermission.Administrator)]
-        //public async Task Order(int value)
-        //{
-        //    await Context.Channel.DeleteMessageAsync(Context.Message);
-        //    var routing = RoomRouting.GetRoomRouting();
+        [Command("order")]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task Order(int value)
+        {
+            await Context.Channel.DeleteMessageAsync(Context.Message);
+            var routing = RoomRouting.GetRoomRouting();
 
-        //    var room = routing.GetRoom(Context.Channel);
+            var room = routing.GetRoom(Context.Channel);
 
-        //    G2gOrder order = new G2gOrder()
-        //    {
-        //        Buyer = "Hacra",
-        //        Amount = value,
-        //        OrderId = "№5133842",
-        //        Server = Context.Channel.Name
-        //    };
+            G2gOrder order = new G2gOrder()
+            {
+                Buyer = "Udenlo",
+                Amount = value,
+                OrderId = "№4170194",
+                Server = "Benediction [US] Alliance"
+            };
 
-        //    room.SetOrder(order);
+            room.SetOrder(order);
 
-        //    Emoji react = new Emoji("💰");
-        //    var message = await Context.Channel.SendMessageAsync("", false, order.GetOrderEmbed());
+            Emoji react = new Emoji("💰");
+            var message = await Context.Channel.SendMessageAsync("", false, order.GetOrderEmbed());
 
-        //    await message.AddReactionAsync(react);
-        //}
+            await message.AddReactionAsync(react);
+        }
     }
     public class RequireGuildAttribute : PreconditionAttribute
     {

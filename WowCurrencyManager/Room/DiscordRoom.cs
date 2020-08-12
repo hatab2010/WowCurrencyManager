@@ -106,9 +106,22 @@ namespace WowCurrencyManager.Room
             }
         }
 
-        public void SetMinLos(decimal value)
+        public Embed SetMinLos(decimal value)
         {
             MinLos = value;
+
+            var builder = new EmbedBuilder();
+
+            return GetMinimalPriceEmbed();
+        }
+
+        public Embed GetMinimalPriceEmbed()
+        {
+            var builder = new EmbedBuilder();
+            builder.Description = $"{Server.FirstCharUp()} [{WordPart}] {Fraction}";
+            builder.AddField("minimal price:", $"{MinLos} USD");
+
+            return builder.Build();
         }
 
         public RoomClient GetClient(IUser user)
@@ -191,7 +204,8 @@ namespace WowCurrencyManager.Room
         {
             EmbedBuilder builder = new EmbedBuilder();
 
-            builder.WithTitle($"Баланс {Server.FirstCharUp()} [{WordPart}] {Fraction}");            
+            builder.WithTitle($"Баланс {Server.FirstCharUp()} [{WordPart.ToUpper()}] {Fraction.FirstCharUp()}");
+            //builder.WithThumbnailUrl("https://cdn.discordapp.com/attachments/739498423958372362/743083086945714176/hideaway-logo-final-flat-max.jpg");
 
             foreach (var item in Clients)
             {
@@ -211,9 +225,7 @@ namespace WowCurrencyManager.Room
                 builder.WithColor(Color.Green);
             }
 
-            builder.AddField("____", "Общая информаци:", false);
-            builder.AddField("прайс", _minLos, true);
-            builder.AddField("обновление", UpdateMinutes, true);
+            builder.AddField("Update", UpdateMinutes + " min", false);                    
 
             var channelMessages = await Channel.GetMessagesAsync(1, CacheMode.AllowDownload).LastAsync();
 

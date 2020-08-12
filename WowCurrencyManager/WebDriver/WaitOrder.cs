@@ -96,8 +96,11 @@ namespace WowCurrencyManager.WebDriver
 
                 var fraction = driver.WaitElement(By.XPath(BuildXpathString("Faction"))).Text;
                 var buyer = driver.WaitElement(By.XPath(BuildXpathString("Character Name"))).Text;
-                var OrderNumberEl = driver.WaitElement(By.CssSelector(".trade__order__top-num"));                
-                var amount = int.Parse(driver.WaitElement(By.XPath("//td[@class = 'sales-history__table-quantity' and contains(@data-th, 'QTY.')]")).Text);
+                var OrderNumberEl = driver.WaitElement(By.CssSelector(".trade__order__top-num"));             
+                var amount = int.Parse(driver
+                    .WaitElement(By.XPath("//td[@class = 'sales-history__table-quantity' and contains(@data-th, 'QTY.')]"))
+                    .Text.Replace(",", ""));
+
                 var orderNumber = Regex.Match(OrderNumberEl.Text, @"SOLD ORDER №\d*").Value.Replace("SOLD ORDER", "");
 
                 string BuildXpathString(string fieldName)
@@ -153,7 +156,8 @@ namespace WowCurrencyManager.WebDriver
                     "waiting for you again ";
 
                 driver.WaitElement(By.TagName("textarea")).SendKeys(messageStr);
-                driver.WaitElement(By.TagName("textarea")).SendKeys(Keys.Enter);                
+                driver.WaitElement(By.TagName("textarea")).SendKeys(Keys.Enter);
+                Thread.Sleep(2000);
             }
             catch (Exception ex)
             {

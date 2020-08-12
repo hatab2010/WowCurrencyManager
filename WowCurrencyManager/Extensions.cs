@@ -13,14 +13,14 @@ namespace WowCurrencyManager
     {
         static int _time;
 
-        public static string FirstCharUp(this string value)
+        public static string FirstCharUp(this string input)
         {
-            var builder = new StringBuilder();
-            var firstChar = value[0];
-            value.Remove(0);
-            builder.Append(firstChar.ToString().ToUpper());
-            builder.Append(value);
-            return builder.ToString();
+            switch (input)
+            {
+                case null: throw new ArgumentNullException(nameof(input));
+                case "": throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input));
+                default: return input.First().ToString().ToUpper() + input.Substring(1);
+            }
         }
 
         public static IWebElement WaitElement(this IWebDriver driver, By findeOption)

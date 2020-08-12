@@ -61,10 +61,32 @@ namespace WowCurrencyManager.WebDriver
                 }
             });
 
-            var PriveEl = driver
-                .WaitElement(By.CssSelector(".products__cells .products__exch-rate"));
+            //Finde lowest price
+            var externalOrderEls = driver.WaitElements(By.ClassName("products__row"));
+            var profileUsername = driver.WaitElement(By.ClassName("header__profile-name")).Text.Trim().ToLower();
+            IWebElement priceEl = null;
 
-            var lowPriceVlue = decimal.Parse(Regex.Match(PriveEl.Text, @"\d*[.]\d*").Value.Replace(".", ","));
+            foreach (var externalOrder in externalOrderEls)
+            {
+                var sellerName = externalOrder
+                    .FindElement(By.ClassName("seller__name")).Text
+                    .Trim()
+                    .ToLower();
+
+                var isMe = sellerName.Contains(profileUsername);
+
+                if (isMe)
+                {
+                    continue;
+                }
+                else
+                {
+                    priceEl = externalOrder.FindElement(By.ClassName("products__exch-rate"));
+                    break;
+                }
+            }
+
+            var lowPriceVlue = decimal.Parse(Regex.Match(priceEl.Text, @"\d*[.]\d*").Value.Replace(".", ","));
 
             //Go to the my order page
             switch (worldPart)
@@ -100,7 +122,6 @@ namespace WowCurrencyManager.WebDriver
                 order.SetPrice(Sender.MinLos);
             }
             
-            //var Orse = new Products(,);
             void selectOption(IWebElement handler, string selectItem)
             {
                 var curServer = Regex.Replace(handler.Text, "[’]", "");

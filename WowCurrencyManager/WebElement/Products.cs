@@ -45,7 +45,6 @@ namespace WowCurrencyManager.WebElement
                 }
                 
                 var formatLabel = Regex.Replace(serverName, "[’]", "").ToLower();
-
                 var isCurrent = Regex.IsMatch(formatLabel, $@"{_server} \[\w*\] - {_fraction}");
 
                 if (isCurrent)

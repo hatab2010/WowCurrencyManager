@@ -119,9 +119,12 @@ namespace WowCurrencyManager.Room
         public Embed SellEmbedBuild(int value)
         {
             var builder = new EmbedBuilder();
+            var footer = new EmbedFooterBuilder();
+            footer.Text = $"общий дебет: {Balance}";
 
-            builder.WithDescription($"{Name} провел операцию: {value}");
-            builder.Color = Color.Blue;
+            builder.WithDescription($"{Name} продал: {value}");
+            builder.Color = Color.Blue;            
+            builder.WithFooter(footer);
 
             return builder.Build();
         }
@@ -129,9 +132,12 @@ namespace WowCurrencyManager.Room
         public Embed RemoveEmbedBuilder(int value)
         {
             var builder = new EmbedBuilder();
+            var footer = new EmbedFooterBuilder();
+            footer.Text = $"общий дебет: {Balance}";
 
-            builder.WithDescription($"{Name} отменил операцию: {value}");
+            builder.WithDescription($"{Name} отменил: {value}");
             builder.Color = Color.DarkBlue;
+            builder.WithFooter(footer);
 
             return builder.Build();
         }
