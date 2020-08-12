@@ -41,7 +41,6 @@ namespace WowCurrencyManager
             string token = "NzM5NjI1NzYyNDk5NTkyMjEy.XydMKw.8v_fJNiq_k5qOQqsmgWFfZCn85k";
 
             _client.Log += _client_Log;
-
             await RegisterCommandsAsync();
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
@@ -91,7 +90,7 @@ namespace WowCurrencyManager
             var message = arg as SocketUserMessage;
             var context = new SocketCommandContext(_client, message);            
 
-            if (message.Author.IsBot) return;
+            if (message.Author.IsBot) return;            
 
             int argPos = 0;
 

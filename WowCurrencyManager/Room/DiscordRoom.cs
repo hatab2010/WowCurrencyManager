@@ -19,11 +19,18 @@ namespace WowCurrencyManager.Room
         Good, Bad
     }
 
-    public class DiscordRoom
+    public class RoomBase
     {
-        public static Action<DiscordRoom> BalanceChanged;
-
+        public List<RoomClient> Clients = new List<RoomClient>();
+        public ISocketMessageChannel Channel { protected set; get; }
         public string Name => Channel.Name;
+
+        protected int _balance;
+    }
+
+    public class DiscordRoom : RoomBase
+    {
+        public static Action<DiscordRoom> Changed;        
         public string Server => Regex.Replace(Name.Split('-')[0], "[_]", " ").ToLower();
         public string Fraction => Channel.Name.Split('-')[2].ToLower();
         public string WordPart => Channel.Name.Split('-')[1].ToLower();        
@@ -34,20 +41,16 @@ namespace WowCurrencyManager.Room
             { 
                 if (_minLos != value)
                 {
-                    BalanceChanged?.Invoke(this);
+                    Changed?.Invoke(this);
                 }
                 _minLos = value; 
             }
         }
         public int UpdateMinutes = 30;
-
-        public ISocketMessageChannel Channel { private set; get; }
-        public List<RoomClient> Clients = new List<RoomClient>();
-        private int _balance;
         private G2gOrder _order;
         private Stopwatch _lLastUpdate;
         private decimal _minLos;
-
+        private const int MIN_BALANS = 400;
 
         public int Balance
         {
@@ -56,6 +59,7 @@ namespace WowCurrencyManager.Room
             {
                 if (_balance != value)
                 {
+                    _lLastUpdate.Restart();
                     _balance = value;
                 }
             }
@@ -71,7 +75,7 @@ namespace WowCurrencyManager.Room
                 {
                     if (value != null)
                     {
-                        SenOrderInChannle(value);
+                        SendOrderInChannle(value);
                     }
 
                     _order = value;
@@ -94,9 +98,9 @@ namespace WowCurrencyManager.Room
             while (true)
             {
                 Thread.Sleep(1000);
-                if (_lLastUpdate.ElapsedMilliseconds > UpdateMinutes * 60)
+                if (_lLastUpdate.ElapsedMilliseconds > UpdateMinutes * 60 * 1000 && Balance > MIN_BALANS)
                 {
-                    BalanceChanged?.Invoke(this);
+                    Changed?.Invoke(this);
                     _lLastUpdate.Restart();
                 }
             }
@@ -130,11 +134,6 @@ namespace WowCurrencyManager.Room
             }
         }
 
-        public void SetOrder(G2gOrder order)
-        {
-            Order = order;
-        }
-
         public void RemoveClient(ulong id)
         {
             var client = Clients.FirstOrDefault(_ => _.Id == id);
@@ -146,14 +145,14 @@ namespace WowCurrencyManager.Room
             SendBalanceMessage().Wait();
         }
 
+        public void SetOrder(G2gOrder order)
+        {
+            Order = order;
+        }        
+
         public void RemoveAll()
         {
-            var deleteClients = Clients;
-
-            foreach (var item in deleteClients)
-            {
-                Clients.Remove(item);
-            }
+            Clients.Clear();
 
             IsOperationAllowed = true;
             UpdateBalance();
@@ -167,7 +166,7 @@ namespace WowCurrencyManager.Room
             if ((Clients == null || Clients.Count == 0) && Balance != 0)
             {
                 Balance = 0;
-                BalanceChanged?.Invoke(this);
+                Changed?.Invoke(this);
                 return;
             }
 
@@ -177,10 +176,10 @@ namespace WowCurrencyManager.Room
                 return;
 
             Balance = result;
-            BalanceChanged?.Invoke(this);
+            Changed?.Invoke(this);            
         }
 
-        public async void SenOrderInChannle(G2gOrder order)
+        public async void SendOrderInChannle(G2gOrder order)
         {
             Emoji react = new Emoji("💰");
             var message = await Channel.SendMessageAsync("", false, order.GetOrderEmbed());
@@ -192,7 +191,7 @@ namespace WowCurrencyManager.Room
         {
             EmbedBuilder builder = new EmbedBuilder();
 
-            builder.WithTitle($"Баланс {Server.ToUppercase()} [{WordPart}] {Fraction}");
+            builder.WithTitle($"Баланс {Server.FirstCharUp()} [{WordPart}] {Fraction}");            
 
             foreach (var item in Clients)
             {
@@ -208,9 +207,13 @@ namespace WowCurrencyManager.Room
             }
             else
             {
-                IsOperationAllowed = true;      //Разрешить операции
+                IsOperationAllowed = true;
                 builder.WithColor(Color.Green);
             }
+
+            builder.AddField("____", "Общая информаци:", false);
+            builder.AddField("прайс", _minLos, true);
+            builder.AddField("обновление", UpdateMinutes, true);
 
             var channelMessages = await Channel.GetMessagesAsync(1, CacheMode.AllowDownload).LastAsync();
 
@@ -231,15 +234,8 @@ namespace WowCurrencyManager.Room
             }
         }
 
-        public void OrderAccepted()
+        public async void OrderSuccess()
         {
-            //TODO selenium
-        }
-
-        public void OrderSuccess()
-        {
-            //TODO selenium
-
             var operationResult = Order.Performer.Balance - Order.Amount;
             Balance -= Order.Amount;
 
@@ -254,17 +250,15 @@ namespace WowCurrencyManager.Room
                 Order.Performer.SetBalance(0);
             }
 
-            SendBalanceMessage().Wait();
+            await SendBalanceMessage();
         }
     }
 
-    public class RoomClient : PurseBase
-    {
-        public ulong Id { private set; get; }
-        public string AvatarUrl { private set; get; }
-        public string Name { private set; get; }
+    public class RoomClient : ClientBase
+    {        
+        public string AvatarUrl { private set; get; }        
 
-        public RoomClient(ulong id, string name, string avatarUrl)
+        public RoomClient(ulong id, string name, string avatarUrl) 
         {
             Id = id;
             Name = name;

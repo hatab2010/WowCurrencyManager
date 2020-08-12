@@ -13,13 +13,13 @@ namespace WowCurrencyManager
     {
         static int _time;
 
-        public static string ToUppercase(this string value)
+        public static string FirstCharUp(this string value)
         {
             var builder = new StringBuilder();
             var firstChar = value[0];
-            var other = value.Remove(value[0]);
+            value.Remove(0);
             builder.Append(firstChar.ToString().ToUpper());
-            builder.Append(other);
+            builder.Append(value);
             return builder.ToString();
         }
 

@@ -77,7 +77,7 @@ namespace WowCurrencyManager.WebDriver
                 return;
 
                 RoomExist:
-
+                
                 var operationLink = currentOrder.FindElement(By.ClassName("sales-history__product-id"));
                 operationLink.Click();
 
@@ -85,34 +85,40 @@ namespace WowCurrencyManager.WebDriver
                 var btn = driver.WaitElement(By.ClassName("progress_gr"));
                 Thread.Sleep(1000);
                 btn.Click();
+                Thread.Sleep(1000);
+
+
+                var orderServer = driver.WaitElement(By.XPath(BuildXpathString("Server"))).Text;
+                driver.WaitElement(By.XPath("//a[contains(@class, 'progress_gr') and contains(text(), 'Start Trading')]"))
+                   .Click();
 
                 //Parse order info
-                var orderServer = driver.WaitElement(By.XPath(BuildXpathString("Server"))).Text;
-                var fraction = driver.WaitElement(By.XPath(BuildXpathString("Faction"))).Text;
-                var buyer = driver.WaitElement(By.ClassName("seller__name")).Text;
 
-                var OrderNumberEl = driver.WaitElement(By.CssSelector(".trade__order__top-num span"));
-                var orderNumber = Regex.Match(OrderNumberEl.Text, @"№\d*").Value;
-                var amount = int.Parse(driver.FindElement(By.XPath("//td[@class = 'sales-history__table-quantity' and contains(@data-th, 'QTY.')]")).Text);
+                var fraction = driver.WaitElement(By.XPath(BuildXpathString("Faction"))).Text;
+                var buyer = driver.WaitElement(By.XPath(BuildXpathString("Character Name"))).Text;
+                var OrderNumberEl = driver.WaitElement(By.CssSelector(".trade__order__top-num"));                
+                var amount = int.Parse(driver.WaitElement(By.XPath("//td[@class = 'sales-history__table-quantity' and contains(@data-th, 'QTY.')]")).Text);
+                var orderNumber = Regex.Match(OrderNumberEl.Text, @"SOLD ORDER №\d*").Value.Replace("SOLD ORDER", "");
 
                 string BuildXpathString(string fieldName)
                 {
                     return $"//span[contains(@class, 'game-info__title') and contains(text(), '{fieldName}')]/../span[contains(@class, 'game-info__info')]";
                 }
 
-                driver.WaitElement(By.XPath("//a[contains(@class, 'progress_gr') and contains(text(), 'Start Trading')]"))
-                    .Click();
+               
+                Thread.Sleep(1000);
 
                 //TODO проверить на принятие ордера
                 driver.WaitElement(By.ClassName("trade__field-input")).SendKeys(amount.ToString());
 
                 //Create order in discord room
+                var titles = driver.WaitElement(By.ClassName("purchase-title")).Text.Split('>');
                 var myOrder = new Model.G2gOrder()
                 {
                     Buyer = buyer,
                     OrderId = orderNumber,
                     Amount = amount,
-                    Server = orderServer,
+                    Server = $"{titles[1].FirstCharUp()} {titles[2].Replace("(GOLD)", "")}",
                     Fraction = fraction
                 };
 
@@ -149,9 +155,9 @@ namespace WowCurrencyManager.WebDriver
                 driver.WaitElement(By.TagName("textarea")).SendKeys(messageStr);
                 driver.WaitElement(By.TagName("textarea")).SendKeys(Keys.Enter);                
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                
+                Console.WriteLine(ex);
             }    
         }
 

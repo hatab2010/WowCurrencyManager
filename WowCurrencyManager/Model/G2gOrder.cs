@@ -21,7 +21,7 @@ namespace WowCurrencyManager.Model
         {
             var builder = new EmbedBuilder();             
 
-            builder.WithTitle("Server");
+            builder.WithTitle($"{Server}");
             builder.AddField("Order", OrderId, false);
             builder.AddField("Gold", Amount, false);
             builder.AddField("Buyer", Buyer, false);
@@ -32,6 +32,7 @@ namespace WowCurrencyManager.Model
                 var footer = new EmbedFooterBuilder();
                 footer.WithIconUrl(Performer.AvatarUrl)
                 .WithText(Performer.Name);
+
                 builder.AddField("___", "Order delivery by:");
                 builder.WithFooter(footer);
                 builder.Color = Color.Green;

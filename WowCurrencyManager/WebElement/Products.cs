@@ -106,8 +106,8 @@ namespace WowCurrencyManager.WebElement
 
                 var input = _driver.WaitElement(By.ClassName("input-large"));
                 input.Clear();
-                var resukt = value - (decimal)0.00001;
-                input.SendKeys((resukt).ToString().Replace(",", "."));
+                
+                input.SendKeys((value).ToString().Replace(",", "."));
                 _driver.FindElement(By.CssSelector(".btn.btn--green.editable-submit")).Click();
             });
         }

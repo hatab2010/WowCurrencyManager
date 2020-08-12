@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 namespace WowCurrencyManager.Room
 {
-    public abstract class PurseBase
+    public abstract class ClientBase
     {
-        public int Balance { private set; get; }
+        public string Name { protected set; get; }
+        public ulong Id { protected set; get; }
+        public int Balance { protected set; get; }
         public void SetBalance(int value)
         {
             Balance = value;

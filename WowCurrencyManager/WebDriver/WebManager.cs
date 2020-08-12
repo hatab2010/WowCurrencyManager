@@ -31,7 +31,7 @@ namespace WowCurrencyManager.WebDriver
         public WebManager()
         {
             InitDriver();
-            DiscordRoom.BalanceChanged += OnBalanceChanged;
+            DiscordRoom.Changed += OnBalanceChanged;
 
             Task.Run(Process);
         }

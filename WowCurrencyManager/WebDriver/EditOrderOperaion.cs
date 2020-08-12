@@ -92,7 +92,8 @@ namespace WowCurrencyManager.WebDriver
             order.SetAmount(Sender.Balance);
             if (lowPriceVlue > Sender.MinLos)
             {
-                order.SetPrice(lowPriceVlue);
+                var result = lowPriceVlue - (decimal)0.00001;
+                order.SetPrice(result);
             }
             else
             {
