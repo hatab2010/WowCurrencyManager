@@ -254,12 +254,12 @@ namespace WowCurrencyManager.Room
             if (operationResult >= 0)
             {
                 IsOperationAllowed = true;
-                Order.Performer.SetBalance(operationResult);
+                Order.Performer.SetGoldAmount(operationResult);
             }
             else
             {
                 IsOperationAllowed = false;
-                Order.Performer.SetBalance(0);
+                Order.Performer.SetGoldAmount(0);
             }
 
             await SendBalanceMessage();

@@ -14,7 +14,11 @@ namespace WowCurrencyManager.WebDriver
 {
     enum OperationPage
     {
-        MyOrders, Currency, ExternalOrder, OrderProcess, SendMessage
+        MyOrders,
+        Currency,
+        ExternalOrder,
+        OrderProcess,
+        SendMessage
     }
 
     public interface IBalance

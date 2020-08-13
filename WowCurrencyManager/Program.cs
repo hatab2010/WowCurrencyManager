@@ -20,7 +20,10 @@ namespace WowCurrencyManager
 {
     class Program
     {
-        static void Main(string[] args) => new Program().RunBotAsync().GetAwaiter().GetResult();
+        static void Main(string[] args) => new Program()
+            .RunBotAsync()
+            .GetAwaiter()
+            .GetResult();
 
         private DiscordSocketClient _client;
         private CommandService _commands;
@@ -38,7 +41,7 @@ namespace WowCurrencyManager
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
 
-            string token = "";
+            string token = "NzM5NjI1NzYyNDk5NTkyMjEy.XydMKw.-MR9R0c9Cj-978wSpLpda-pjuOM";
 
             _client.Log += _client_Log;
             await RegisterCommandsAsync();
@@ -60,7 +63,10 @@ namespace WowCurrencyManager
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
         }
 
-        private Task HandleReactionAddedAsync(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
+        private Task HandleReactionAddedAsync(
+            Cacheable<IUserMessage, ulong> arg1, 
+            ISocketMessageChannel arg2, 
+            SocketReaction arg3)
         {
             if (arg3.Emote.ToString() != "💰"
                 || arg3.User.Value.IsBot)

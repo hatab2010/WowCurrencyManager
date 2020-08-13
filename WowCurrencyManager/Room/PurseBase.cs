@@ -11,7 +11,7 @@ namespace WowCurrencyManager.Room
         public string Name { protected set; get; }
         public ulong Id { protected set; get; }
         public int Balance { protected set; get; }
-        public void SetBalance(int value)
+        public void SetGoldAmount(int value)
         {
             Balance = value;
         }

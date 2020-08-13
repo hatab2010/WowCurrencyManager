@@ -18,35 +18,72 @@ namespace WowCurrencyManager.Modules
     [RequireBotPermission(ChannelPermission.ManageMessages)]
     public class FinanceCommands : ModuleBase<SocketCommandContext>
     {
-        [Command("ыуе")]
+        [Command("pay")]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task Pay()
         {
             await Context.Message.DeleteAsync();
             var room = RouteRoom();
-            var embedTickets = room.PayOperation();
+            var clients = room.PayOperation();
 
-            foreach (var item in embedTickets)
+            foreach (var item in clients)
             {
-                await Context.Channel.SendMessageAsync("", false, item);
+                await Context.User.SendMessageAsync("", false, item.BalanceUSDBuild());
+                await Context.Channel.SendMessageAsync("", false, item.PayEmbedBuild());
+                item.RefrashBalance();
             }
         }
 
-        [Command("Add")]
+        [Command("set")]
         [RequireUserPermission(GuildPermission.Administrator)]
-        public async Task Pay(string command) 
+        public async Task Set(int value, [Remainder]string username) 
         {
-            await Context.Message.DeleteAsync();
-            var room = RouteRoom();
-            var embedTickets = room.PayOperation();
+            await Context.Channel.DeleteMessageAsync(Context.Message);
+            var routing = FinanseRoomRouting.Get();
+            var room = routing.Cash.Rooms.FirstOrDefault(_=>_.Id == Context.Channel.Id);
 
-            var user = Context.Channel.GetUsersAsync();
-
-            foreach (var item in embedTickets)
+            if (room == null)
             {
-                await Context.Channel.SendMessageAsync("", false, item);
+                await Context.User.SendMessageAsync($"Ошибка запроса: комната не была инициализирована");
+                return;
             }
+
+            var client = room.Clients.FirstOrDefault(_ => _.Name == username);
+
+            if (client == null)
+            {
+                await Context.User.SendMessageAsync($"Пользователь с ником {username} не найден");
+            }
+
+            client.AddBalance(value);
+            await Context.Channel.SendMessageAsync("", false, client.BalanceBuild());
         }
+
+        [Command("wage")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task Wage(int value, [Remainder]string username)
+        {
+            await Context.Channel.DeleteMessageAsync(Context.Message);
+            var routing = FinanseRoomRouting.Get();
+            var room = routing.Cash.Rooms.FirstOrDefault(_ => _.Id == Context.Channel.Id);
+
+            if (room == null)
+            {
+                await Context.User.SendMessageAsync($"Ошибка запроса: комната не была инициализирована");
+                return;
+            }
+
+            var client = room.Clients.FirstOrDefault(_ => _.Name == username);
+
+            if (client == null)
+            {
+                await Context.User.SendMessageAsync($"Пользователь с ником {username} не найден");
+            }
+
+            client.AddUSDBalance(value);
+            await Context.User.SendMessageAsync($"({Context.Channel.Name}) {client.Name}: зачеслено {client.USDBalance}$");
+        }
+
         [Command("sold")]
         public async Task Sold(int value)
         {
@@ -114,7 +151,7 @@ namespace WowCurrencyManager.Modules
             var room = routing.GetRoom(Context.Channel);
             var client = room.GetClient(Context.User);
 
-            client.SetBalance(value);
+            client.SetGoldAmount(value);
             room.UpdateBalance();
 
             await room.SendBalanceMessage();
@@ -130,6 +167,29 @@ namespace WowCurrencyManager.Modules
 
             var room = routing.GetRoom(Context.Channel);
             room.RemoveAll();
+        }
+
+
+        [Command("set")]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task Set(int gold, [Remainder]string username)
+        {   
+            await Context.Channel.DeleteMessageAsync(Context.Message);
+            var routing = RoomRouting.GetRoomRouting();
+            var room = routing.GetRoom(Context.Channel);
+            var selectClient = room.Clients.FirstOrDefault(_ => _.Name == username);
+            
+            if (selectClient == null)
+            {
+                await Context.User.SendMessageAsync($"Пользователь с ником {username} не найден");
+            }
+            else
+            {
+                selectClient.SetGoldAmount(gold);
+                room.UpdateBalance();
+                await room.SendBalanceMessage();
+            }
         }
 
         [Command("disable")]

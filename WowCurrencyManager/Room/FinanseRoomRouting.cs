@@ -79,78 +79,6 @@ namespace WowCurrencyManager.Room
     }
 
     [Serializable]
-    public class FinanceClient
-    {
-        static public Action Changed;
-        private int balance;
-
-        public int Balance
-        {
-            get => balance; private
-            set
-            {
-                balance = value;
-                Changed?.Invoke();
-            }
-        }
-        public ulong Id { private set; get; }
-        public string Name { private set; get; }
-        public FinanceClient(ulong id, string name)
-        {
-            Id = id;
-            Name = name;
-        }
-
-        internal void AddBalance(int value)
-        {
-            Balance += value;
-        }
-
-        public void RefrashBalance()
-        {
-            Balance = 0;
-        }
-
-        internal void RemoveBalance(int value)
-        {
-            Balance -= value;
-        }
-
-        public Embed SellEmbedBuild(int value)
-        {
-            var builder = new EmbedBuilder();
-            var footer = new EmbedFooterBuilder();
-            footer.Text = $"общий дебет: {Balance}";
-
-            builder.WithDescription($"{Name} продал: {value}");
-            builder.Color = Color.Blue;            
-            builder.WithFooter(footer);
-
-            return builder.Build();
-        }
-
-        public Embed RemoveEmbedBuilder(int value)
-        {
-            var builder = new EmbedBuilder();
-            var footer = new EmbedFooterBuilder();
-            footer.Text = $"общий дебет: {Balance}";
-
-            builder.WithDescription($"{Name} отменил: {value}");
-            builder.Color = Color.DarkBlue;
-            builder.WithFooter(footer);
-
-            return builder.Build();
-        }
-
-        public Embed PayEmbedBuild()
-        {
-            var builder = new EmbedBuilder();
-            builder.WithDescription($"{Name} итоговый дебет: {Balance}");
-            return builder.Build();
-        }
-    }
-
-    [Serializable]
     public class FinanceRoom
     {
         public ulong Id { private set; get; }
@@ -166,14 +94,15 @@ namespace WowCurrencyManager.Room
             Clients.Add(client);
         }
 
-        public List<Embed> PayOperation()
+        public List<FinanceClient> PayOperation()
         {
-            List<Embed> result = new List<Embed>();
+            List<FinanceClient> result = new List<FinanceClient>();
 
             foreach (var item in Clients)
             {
-                result.Add(item.PayEmbedBuild());
-                item.RefrashBalance();
+                if (item.Balance == 0 && item.USDBalance == 0)
+                    continue;
+                result.Add(item);          
             }
 
             return result;
