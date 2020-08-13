@@ -6,7 +6,7 @@ namespace WowCurrencyManager.WebDriver
     public interface IOperation
     {
         //Action<IWebDriver> Start { get; }
-        DiscordRoom Sender { get; }
+        FarmRoom Sender { get; }
 
         //string PassThePage(IWebDriver driver);
 

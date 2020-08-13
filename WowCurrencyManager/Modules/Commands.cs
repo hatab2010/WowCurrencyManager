@@ -29,7 +29,11 @@ namespace WowCurrencyManager.Modules
 
             foreach (var item in clients)
             {
-                await Context.User.SendMessageAsync("", false, item.BalanceUSDBuild());
+                var builder = new EmbedBuilder();
+                builder.WithTitle(Context.Channel.Name);
+                builder.WithDescription($"{item.Name} итоговый дебет: {item.USDBalance}$");
+
+                await Context.User.SendMessageAsync("", false, builder.Build());
                 await Context.Channel.SendMessageAsync("", false, item.PayEmbedBuild());
                 item.RefrashBalance();
             }
@@ -67,7 +71,7 @@ namespace WowCurrencyManager.Modules
             await Context.Channel.DeleteMessageAsync(Context.Message);
             var routing = FinanseRoomRouting.Get();
             var room = routing.Cash.Rooms.FirstOrDefault(_ => _.Id == Context.Channel.Id);
-
+                   
             if (room == null)
             {
                 await Context.User.SendMessageAsync($"Ошибка запроса: комната не была инициализирована");
@@ -76,17 +80,25 @@ namespace WowCurrencyManager.Modules
 
             var client = room.Clients.FirstOrDefault(_ => _.Name == username);
 
+
+            var builder = new EmbedBuilder();
+            var footer = new EmbedFooterBuilder();
+
+            builder.WithTitle($"{Context.Channel.Name}");
+            builder.WithDescription($"{client.Name}: зачеслено {value}$");
+            footer.WithText($"Итоговый дебет: {client.USDBalance}");
+            builder.WithFooter(footer);
+
             if (client == null)
             {
                 await Context.User.SendMessageAsync($"Пользователь с ником {username} не найден");
             }
 
             client.AddUSDBalance(value);
-            await Context.User.SendMessageAsync($"({Context.Channel.Name}) {client.Name}: зачеслено {client.USDBalance}$");
+            await Context.User.SendMessageAsync("", false, builder.Build());
         }
 
         [Command("sold")]
-        [RequireUserPermission(GuildPermission.Administrator)]
         public async Task Sold(int value)
         {
             var client = RoutClient();            
@@ -134,10 +146,29 @@ namespace WowCurrencyManager.Modules
         }
     }
 
+    public class ForAllCommands : ModuleBase<SocketCommandContext>
+    {
+        [Command("clear")]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
+        public async Task Clear()
+        {
+            var messages = Context.Channel.GetMessagesAsync(300)
+                .FlattenAsync();
+            foreach (var item in await messages)
+            {
+                if (item.Author.IsBot == true)
+                {
+                    await Context.Channel.DeleteMessageAsync(item);
+                }
+            }
+        }
+    }
+
+    
     [RequireGuild("BANK")]
     public class Commands : ModuleBase<SocketCommandContext>
     {
-        public static Action OnStop;
+        public static Action Stoped;
 
         [Command("ping")]
         public async Task Ping()
@@ -149,7 +180,7 @@ namespace WowCurrencyManager.Modules
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task Stop()
         {
-            OnStop?.Invoke();
+            Stoped?.Invoke();
             Environment.Exit(0);
         }
 
@@ -158,7 +189,7 @@ namespace WowCurrencyManager.Modules
         public async Task Gold(int value)
         {
             await Context.Channel.DeleteMessageAsync(Context.Message);
-            var routing = RoomRouting.GetRoomRouting();
+            var routing = FarmRoomRouting.GetRoomRouting();
 
             var room = routing.GetRoom(Context.Channel);
             var client = room.GetClient(Context.User);
@@ -175,7 +206,7 @@ namespace WowCurrencyManager.Modules
         public async Task Wipe()
         {
             await Context.Channel.DeleteMessageAsync(Context.Message);
-            var routing = RoomRouting.GetRoomRouting();
+            var routing = FarmRoomRouting.GetRoomRouting();
 
             var room = routing.GetRoom(Context.Channel);
             room.RemoveAll();
@@ -188,7 +219,7 @@ namespace WowCurrencyManager.Modules
         public async Task Set(int gold, [Remainder]string username)
         {   
             await Context.Channel.DeleteMessageAsync(Context.Message);
-            var routing = RoomRouting.GetRoomRouting();
+            var routing = FarmRoomRouting.GetRoomRouting();
             var room = routing.GetRoom(Context.Channel);
             var selectClient = room.Clients.FirstOrDefault(_ => _.Name == username);
             
@@ -208,7 +239,7 @@ namespace WowCurrencyManager.Modules
         public async Task Disable()
         {
             await Context.Channel.DeleteMessageAsync(Context.Message);
-            var routing = RoomRouting.GetRoomRouting();
+            var routing = FarmRoomRouting.GetRoomRouting();
 
             var room = routing.GetRoom(Context.Channel);
             room.RemoveClient(Context.User.Id);
@@ -221,7 +252,7 @@ namespace WowCurrencyManager.Modules
         {           
 
             await Context.Channel.DeleteMessageAsync(Context.Message);
-            var routing = RoomRouting.GetRoomRouting();
+            var routing = FarmRoomRouting.GetRoomRouting();
             var room = routing.GetRoom(Context.Channel);
             var embed = room.SetMinLos(value);
             await Context.User.SendMessageAsync("", false, embed);
@@ -234,7 +265,7 @@ namespace WowCurrencyManager.Modules
         {
 
             await Context.Channel.DeleteMessageAsync(Context.Message);
-            var routing = RoomRouting.GetRoomRouting();
+            var routing = FarmRoomRouting.GetRoomRouting();
             var room = routing.GetRoom(Context.Channel);
             var embed = room.GetMinimalPriceEmbed();
             await Context.User.SendMessageAsync("", false, embed);
@@ -246,7 +277,7 @@ namespace WowCurrencyManager.Modules
         public async Task Update(int value)
         {
             await Context.Channel.DeleteMessageAsync(Context.Message);
-            var routing = RoomRouting.GetRoomRouting();
+            var routing = FarmRoomRouting.GetRoomRouting();
 
             var room = routing.GetRoom(Context.Channel);
             room.UpdateMinutes = value;
@@ -261,7 +292,7 @@ namespace WowCurrencyManager.Modules
         public async Task Order(int value)
         {
             await Context.Channel.DeleteMessageAsync(Context.Message);
-            var routing = RoomRouting.GetRoomRouting();
+            var routing = FarmRoomRouting.GetRoomRouting();
 
             var room = routing.GetRoom(Context.Channel);
 

@@ -10,28 +10,28 @@ using System.Threading.Tasks;
 
 namespace WowCurrencyManager.Room
 {
-    public class RoomRouting
+    public class FarmRoomRouting
     {
         public RestUserMessage LastBalanceInfoMessage;
-        private static RoomRouting instance;
+        private static FarmRoomRouting instance;
 
-        public List<DiscordRoom> Rooms { private set; get; } = new List<DiscordRoom>();
+        public List<FarmRoom> Rooms { private set; get; } = new List<FarmRoom>();
 
-        public static RoomRouting GetRoomRouting()
+        public static FarmRoomRouting GetRoomRouting()
         {
             if (instance == null)
-                instance = new RoomRouting();
+                instance = new FarmRoomRouting();
 
             return instance;
         }
 
         //TODO убрать создание комнаты. Гет метод неяяно меняет состояние объекта
-        public DiscordRoom GetRoom(ISocketMessageChannel channel)
+        public FarmRoom GetRoom(ISocketMessageChannel channel)
         {
             var room = Rooms.FirstOrDefault(_ => _.Name == channel.Name);
             if (room == null)
             {
-                room = new DiscordRoom(channel);
+                room = new FarmRoom(channel);
                 Rooms.Add(room);
                 return room;
             }
@@ -41,7 +41,7 @@ namespace WowCurrencyManager.Room
             }
         }
 
-        public List<DiscordRoom> GetRooms()
+        public List<FarmRoom> GetRooms()
         {
             return Rooms;
         }

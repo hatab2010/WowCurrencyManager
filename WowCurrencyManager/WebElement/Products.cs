@@ -15,7 +15,8 @@ namespace WowCurrencyManager.WebElement
         private IWebDriver _driver;
         private string _server;
         private string _fraction;
-        private int _reserved;
+        public int Reserved { private set; get; }
+        public int Stock { private set; get; }
 
         private IWebElement _instance;
 
@@ -44,7 +45,7 @@ namespace WowCurrencyManager.WebElement
                     continue;
                 }
                 
-                var formatLabel = Regex.Replace(serverName, "[’]", "").ToLower();
+                var formatLabel = serverName.FormatesServerName();
                 var isCurrent = Regex.IsMatch(formatLabel, $@"{_server} \[\w*\] - {_fraction}");
 
                 if (isCurrent)
@@ -59,10 +60,13 @@ namespace WowCurrencyManager.WebElement
                     .FirstOrDefault(_ => _.Text.Contains("Reserved"))
                     .FindElement(By.ClassName("products__description-info"));
 
-            _reserved = int.Parse(reservedEl.Text);
+            var quantityEl = 
+
+            Reserved = int.Parse(reservedEl.Text);
+            Stock = int.Parse(_instance.FindElement(By.ClassName("g2g_actual_quantity")).Text);
         }
 
-        private void Interaction(Action<IWebElement> action)
+        public void Interaction(Action<IWebElement> action)
         {
             var timer = 0;
 
@@ -78,7 +82,7 @@ namespace WowCurrencyManager.WebElement
                     Thread.Sleep(500);
                     findEl();
                     timer += 500;
-                    if (timer > 30000)
+                    if (timer > 5000)
                     {
                         throw;
                     }
@@ -124,7 +128,7 @@ namespace WowCurrencyManager.WebElement
 
                     var StockInput = _driver.WaitElement(By.CssSelector(".editable-input > input"));
                     StockInput.Clear();
-                    StockInput.SendKeys((value + _reserved).ToString());
+                    StockInput.SendKeys((value + Reserved).ToString());
 
                     _driver.FindElement(By.CssSelector(".btn.btn--green.editable-submit")).Click();
                 });
@@ -162,6 +166,16 @@ namespace WowCurrencyManager.WebElement
                     }
                     return;
                 }
+            }
+
+            try
+            {
+                
+            }
+            catch (Exception)
+            {
+
+                throw;
             }
         }
 

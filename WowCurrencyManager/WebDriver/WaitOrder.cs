@@ -6,24 +6,12 @@ using OpenQA.Selenium;
 using WowCurrencyManager.Room;
 
 namespace WowCurrencyManager.WebDriver
-{
-    //public class WatchSellPriceOperation : OperationBase, IOperation
-    //{
-    //    public Action<IWebDriver> Start { private set; get; }
-
-
-    //    public WatchSellPriceOperation(DiscordRoom sender)
-    //    {
-    //        Url = "";
-    //        Sender = sender;
-    //    }
-    //}
-
+{  
     public class WaitOrder : IOperation
     {
         private IWebDriver _driver;
         static Stopwatch _lastWatchTime = new Stopwatch();
-        public DiscordRoom Sender { private set; get; }
+        public FarmRoom Sender { private set; get; }
         private string _url = "https://www.g2g.com/order/sellOrder?status=5";
 
         public void Start(IWebDriver driver)
@@ -50,10 +38,10 @@ namespace WowCurrencyManager.WebDriver
                 var newOrders = driver.FindElements(By.ClassName("sales-history__table-row-unread"));
 
                 //Check for room exist
-                var root = RoomRouting.GetRoomRouting();
+                var root = FarmRoomRouting.GetRoomRouting();
 
                 IWebElement currentOrder = null;
-                DiscordRoom currentRoom = null;
+                FarmRoom currentRoom = null;
 
                 foreach (var el in newOrders)
                 {
@@ -149,15 +137,31 @@ namespace WowCurrencyManager.WebDriver
                 driver.Navigate().GoToUrl(chatUrl);
 
                 //Send message to byer
-                var messageStr = "hello friend, gold sent expect 1 hour and get your order please " +
+                var messageStr = "Hello friend, gold sent expect 1 hour and get your order please " +
                     "give a good rating and follow me we have the fastest delivery and cheaper gold, 200% " +
                     "safe gold, handmade. We do not buy gold on other sites or from other sellers! even if" +
                     " gold is not available, you can write to us and we completed your order as soon as possible" +
                     "waiting for you again ";
 
-                driver.WaitElement(By.TagName("textarea")).SendKeys(messageStr);
+                var secondMessage = "Hello my dear friend. Gold has been sent, wait an hour. If you like our services, " +
+                    "please give us a good rating and follow us. Come back soon. Good luck to you";
+
+                driver.WaitElement(By.TagName("textarea"));
+
+                Thread.Sleep(3000);
+
+                try
+                {
+                    driver.FindElement(By.XPath("//span[contains(@class, 'Linkify') and contains(text(), 'Hello friend,')]"));
+                    driver.WaitElement(By.TagName("textarea")).SendKeys(secondMessage);                    
+                }
+                catch (Exception)
+                {
+                    driver.WaitElement(By.TagName("textarea")).SendKeys(messageStr);                    
+                    Thread.Sleep(2000);
+                }
+
                 driver.WaitElement(By.TagName("textarea")).SendKeys(Keys.Enter);
-                Thread.Sleep(2000);
             }
             catch (Exception ex)
             {

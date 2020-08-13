@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using OpenQA.Selenium;
@@ -51,9 +52,25 @@ namespace WowCurrencyManager
             return new PinnedElement(driver, findeOption);
         }
 
-        public static Products GetProductsEl(this IWebDriver driver, string server, string fraction)
+        public static string FormatesServerName(this string value)
         {
-            return new Products(driver, server, fraction);
+            var result = Regex.Replace(value, "[’]", "").ToLower();
+            return result;
+        }
+
+        public static Products FindProductEl(this IWebDriver driver, string server, string fraction)
+        {
+            Products result = null;
+            try
+            {
+                result = new Products(driver, server, fraction);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine($"Products {server} {fraction} not found in page {driver.Url}");
+            }
+
+            return result;
         }
 
         public static void WaitToRefrash(this IWebDriver driver)

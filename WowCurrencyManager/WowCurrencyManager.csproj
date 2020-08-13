@@ -102,8 +102,10 @@
     <Compile Include="Room\PurseBase.cs" />
     <Compile Include="Room\RoomRouting.cs" />
     <Compile Include="WebDriver\EditOrderOperaion.cs" />
+    <Compile Include="Global.cs" />
     <Compile Include="WebDriver\IOperation.cs" />
     <Compile Include="WebDriver\OperationBase.cs" />
+    <Compile Include="WebDriver\ReservedWatchManager.cs" />
     <Compile Include="WebDriver\WaitOrder.cs" />
     <Compile Include="WebDriver\WebManager.cs" />
     <Compile Include="WebElement\PinnedElement.cs" />

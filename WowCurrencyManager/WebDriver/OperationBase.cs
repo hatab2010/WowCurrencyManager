@@ -7,7 +7,7 @@ namespace WowCurrencyManager.WebDriver
     {
         public string Url { protected set; get; }
         public int Priorety { protected set; get; }
-        public DiscordRoom Sender { protected set; get; }
+        public FarmRoom Sender { protected set; get; }
 
         public string PassThePage(IWebDriver driver)
         {

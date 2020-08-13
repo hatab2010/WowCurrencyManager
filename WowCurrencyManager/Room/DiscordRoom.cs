@@ -28,9 +28,9 @@ namespace WowCurrencyManager.Room
         protected int _balance;
     }
 
-    public class DiscordRoom : RoomBase
+    public class FarmRoom : RoomBase
     {
-        public static Action<DiscordRoom> Changed;        
+        public static Action<FarmRoom> Changed;        
         public string Server => Regex.Replace(Name.Split('-')[0], "[_]", " ").ToLower();
         public string Fraction => Channel.Name.Split('-')[2].ToLower();
         public string WordPart => Channel.Name.Split('-')[1].ToLower();        
@@ -85,7 +85,7 @@ namespace WowCurrencyManager.Room
 
         public bool IsOperationAllowed { private set; get; } = true;
 
-        public DiscordRoom(ISocketMessageChannel channel)
+        public FarmRoom(ISocketMessageChannel channel)
         {
             _lLastUpdate = new Stopwatch();
             _lLastUpdate.Start();

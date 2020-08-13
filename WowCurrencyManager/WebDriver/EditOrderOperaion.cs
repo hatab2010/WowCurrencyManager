@@ -9,9 +9,9 @@ namespace WowCurrencyManager.WebDriver
 {
     public class EditOrderOperaion : IOperation
     {
-        public DiscordRoom Sender { private set; get; }
+        public FarmRoom Sender { private set; get; }
 
-        public EditOrderOperaion(DiscordRoom room)
+        public EditOrderOperaion(FarmRoom room)
         {
             Sender = room;
         }
@@ -55,7 +55,6 @@ namespace WowCurrencyManager.WebDriver
             selectOption(driver.WaitElement(By.CssSelector("#select2-faction-container")), fraction);
 
             var sortetLinkEl = driver.GetPinnedElement(By.CssSelector(".sort__link"));
-
             sortetLinkEl.Interaction((el) =>
             {
                 if (!el.Text.ToLower().Contains("lowest price"))
@@ -98,26 +97,20 @@ namespace WowCurrencyManager.WebDriver
             switch (worldPart)
             {
                 case "[eu]":
-                    driver.Navigate().GoToUrl("https://www.g2g.com/sell/manage?service=1&game=27815");
+                    driver.Navigate().GoToUrl(Global.INTERNAL_OREDER_EU);
                     break;
                 case "[us]":
-                    driver.Navigate().GoToUrl("https://www.g2g.com/sell/manage?service=1&game=27816");
+                    driver.Navigate().GoToUrl(Global.INTERNAL_ORDER_US);
                     break;
             }
 
             //Finde room order
             Products order = null;
 
-            try
-            {
-                order = driver.GetProductsEl(Sender.Server, fraction);                
-            }
-            catch (Exception)
-            {
+            order = driver.FindProductEl(Sender.Server, fraction);
+            if (order == null)
                 return;
-            }
 
-            order.SetAmount(Sender.Balance);
             if (lowPriceVlue > Sender.MinLos)
             {
                 var result = lowPriceVlue - (decimal)0.00001;
@@ -127,6 +120,7 @@ namespace WowCurrencyManager.WebDriver
             {
                 order.SetPrice(Sender.MinLos);
             }
+            order.SetAmount(Sender.Balance);            
             
             void selectOption(IWebElement handler, string selectItem)
             {

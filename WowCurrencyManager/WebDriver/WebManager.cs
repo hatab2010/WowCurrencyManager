@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Serialization.Configuration;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using WowCurrencyManager.Modules;
 using WowCurrencyManager.Room;
+using WowCurrencyManager.WebElement;
 
 namespace WowCurrencyManager.WebDriver
 {
@@ -27,22 +29,66 @@ namespace WowCurrencyManager.WebDriver
         int Balance { get; }
     }
 
-    public class WebManager
+    public class ManagerBase
     {
-        private static WebManager instance;
-        private IWebDriver _driver;
+        protected IWebDriver _driver;
+
+        protected void CreateDriver(string dirPath)
+        {
+            var options = new ChromeOptions();
+
+            options.AddArgument($"--user-data-dir={dirPath}");
+            _driver = new ChromeDriver(options);
+            _driver.Manage().Timeouts().ImplicitWait = new TimeSpan(15000);
+        }
+
+    }
+
+    public class WotchReserved
+    {
+        enum WordPartType
+        {
+            EU, US
+        }
+
+        private List<FarmRoom> activeRooms = new List<FarmRoom>();
+
+        public void Start(IWebDriver driver)
+        {
+            activeRooms = FarmRoomRouting.GetRoomRouting().Rooms;
+
+            string[] watchetOrdersPages = { "https://www.g2g.com/sell/manage?service=1&game=27815",
+                "https://www.g2g.com/sell/manage?service=1&game=27816" };
+
+            foreach (var page in watchetOrdersPages)
+            {
+                //activeRooms[0].WordPart;
+                //driver.Navigate().GoToUrl(page);                
+
+                foreach (var activeRoom in activeRooms)
+                {
+                    
+                }
+            }                       
+        }
+    }
+
+    public class WebManager : ManagerBase
+    {
+        public static Action<ProfileStatus> Logged;
+        private static WebManager _instance;
         private List<IOperation> _opertions = new List<IOperation>();
 
         public WebManager()
         {
             InitDriver();
-            DiscordRoom.Changed += OnBalanceChanged;
-            Commands.OnStop += Stop;
+            FarmRoom.Changed += OnOrderChanged;
+            Commands.Stoped += OnStoped;
 
             Task.Run(Process);
         }
 
-        void Stop()
+        void OnStoped()
         {
             _driver?.Dispose();
         }
@@ -96,7 +142,7 @@ namespace WowCurrencyManager.WebDriver
             }
         }
 
-        private void OnBalanceChanged(DiscordRoom room)
+        private void OnOrderChanged(FarmRoom room)
         {
             var prevBalanceOperation = _opertions.FirstOrDefault(_ => _.Sender == room && _ is EditOrderOperaion);
 
@@ -111,34 +157,71 @@ namespace WowCurrencyManager.WebDriver
 
         public static WebManager InitManager()
         {      
-            if (instance == null)
+            if (_instance == null)
             {
                 return new WebManager();
             }
             else
             {
-                return instance;
+                return _instance;
             }
         }
 
         private void InitDriver()
         {
-            var dataPath = $"{Directory.GetCurrentDirectory()}/Data";
-            var options = new ChromeOptions();
-
-            options.AddArgument($"--user-data-dir={dataPath}");
-            _driver = new ChromeDriver(options);
-            _driver.Manage().Timeouts().ImplicitWait = new TimeSpan(15000);
+            CreateDriver(Global.MANAGER_PROFILE);
             _driver.Navigate().GoToUrl("https://www.g2g.com/order/sellOrder?status=5");
+            var profileStatus = Authorization();
+
+            switch (profileStatus)
+            {
+                case ProfileStatus.New:
+                    _driver.WaitElement(By.ClassName("sales-history__title-text"));
+                    var js = (IJavaScriptExecutor)_driver;
+                    Thread.Sleep(15000);
+
+                    while ((bool)js.ExecuteScript("return jQuery.active == 0") == false)
+                    {
+                        Thread.Sleep(300);
+                    }
+
+                    _driver.Quit();
+                    ReservedWatchManager.CreateProfile();
+                    ReservedWatchManager.InitManager();
+                    CreateDriver(Global.MANAGER_PROFILE);
+                    break;
+                case ProfileStatus.Old:
+                    ReservedWatchManager.InitManager();
+                    break;
+            }            
+        }
+
+        private ProfileStatus Authorization()
+        {
+            var profileStatus = ProfileStatus.Old;
 
             while (true)
             {
-                Thread.Sleep(5000);
-                if (!_driver.Url.Contains("login") || !_driver.Url.Contains("sso/device"))
+                if (!_driver.Url.Contains("login")
+                    && !_driver.Url.Contains("sso/device")
+                    && !_driver.Url.Contains("/captcha"))
+                {
+                    Logged?.Invoke(profileStatus);
                     break;
+                }
+                else
+                {
+                    profileStatus = ProfileStatus.New;
+                }
             }
 
+            return profileStatus;
         }
+    }
+
+    public enum ProfileStatus
+    {
+        New, Old
     }
 
     public class WebBot : ChromeDriver

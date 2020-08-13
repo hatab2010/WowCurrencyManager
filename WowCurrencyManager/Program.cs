@@ -30,8 +30,8 @@ namespace WowCurrencyManager
         private IServiceProvider _services;
 
         public async Task RunBotAsync()
-        {
-            WebManager.InitManager();
+        {            
+            WebManager.InitManager();           
 
             _client = new DiscordSocketClient();
             _commands = new CommandService();
@@ -41,7 +41,7 @@ namespace WowCurrencyManager
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
 
-            string token = "";
+            string token = "NzQzMjQ4MjYwOTQwMTY5MjU3.XzR54g.6oPtgX-MCAUX16bjfqSH4jb0YwM";
 
             _client.Log += _client_Log;
             await RegisterCommandsAsync();
@@ -74,8 +74,8 @@ namespace WowCurrencyManager
 
             var lMessage = arg1.GetOrDownloadAsync();
             lMessage.Wait();
-            var routing = RoomRouting.GetRoomRouting();
-            DiscordRoom room = routing.GetRoom(arg2);            
+            var routing = FarmRoomRouting.GetRoomRouting();
+            FarmRoom room = routing.GetRoom(arg2);            
 
             if (room.Order.Performer != null)
             {
@@ -85,7 +85,6 @@ namespace WowCurrencyManager
             room.Order.SetPerformer(room.GetClient(arg3.User.Value));
             lMessage.Result.ModifyAsync(msg => msg.Embed = room.Order.GetOrderEmbed());
             lMessage.Result.RemoveAllReactionsAsync();
-
             room.OrderSuccess();
 
             return Task.CompletedTask;
