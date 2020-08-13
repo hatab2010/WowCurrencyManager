@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using WowCurrencyManager.Modules;
 using WowCurrencyManager.Room;
 
 namespace WowCurrencyManager.WebDriver
@@ -36,8 +37,14 @@ namespace WowCurrencyManager.WebDriver
         {
             InitDriver();
             DiscordRoom.Changed += OnBalanceChanged;
+            Commands.OnStop += Stop;
 
             Task.Run(Process);
+        }
+
+        void Stop()
+        {
+            _driver?.Dispose();
         }
 
         private void Process()

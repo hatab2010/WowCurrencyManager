@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.RegularExpressions;
+using System.Threading;
 using OpenQA.Selenium;
 using WowCurrencyManager.Room;
 using WowCurrencyManager.WebElement;
@@ -36,14 +37,19 @@ namespace WowCurrencyManager.WebDriver
                     break;
             }
 
-            var currentCurrencyLavel = driver.FindElement(By.ClassName("header__country-text"));
+            var selectCurrency = driver.WaitElement(By.ClassName("header__country-text"));
 
-            //if (currentCurrencyLavel.Text.Contains("EUR"))
-            //{
-            //    var inCur = driver.WaitElement(By.Id("reg_cur"));
-            //    inCur.Click();
-            //    inCur
-            //}
+            if (!selectCurrency.Text.ToLower().Contains("us"))
+            {
+                selectCurrency.Click();
+                var op = driver.WaitElement(By.XPath("//option[contains(@value, 'USD')]"));
+                op.Click();
+                var save = driver.WaitElement(By.CssSelector(".header__country-btn .btn"));
+                save.Click();
+                Thread.Sleep(150000);
+            }
+
+            var currentCurrencyLavel = driver.WaitElement(By.ClassName("header__country-text"));
 
             selectOption(driver.WaitElement(By.CssSelector("#select2-server-container")), Sender.Server);
             selectOption(driver.WaitElement(By.CssSelector("#select2-faction-container")), fraction);

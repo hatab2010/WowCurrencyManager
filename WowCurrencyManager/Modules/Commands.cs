@@ -18,6 +18,7 @@ namespace WowCurrencyManager.Modules
     [RequireBotPermission(ChannelPermission.ManageMessages)]
     public class FinanceCommands : ModuleBase<SocketCommandContext>
     {
+        
         [Command("pay")]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task Pay()
@@ -85,6 +86,7 @@ namespace WowCurrencyManager.Modules
         }
 
         [Command("sold")]
+        [RequireUserPermission(GuildPermission.Administrator)]
         public async Task Sold(int value)
         {
             var client = RoutClient();            
@@ -135,10 +137,20 @@ namespace WowCurrencyManager.Modules
     [RequireGuild("BANK")]
     public class Commands : ModuleBase<SocketCommandContext>
     {
+        public static Action OnStop;
+
         [Command("ping")]
         public async Task Ping()
         {
             await ReplyAsync("Pong");
+        }
+
+        [Command("stop")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task Stop()
+        {
+            OnStop?.Invoke();
+            Environment.Exit(0);
         }
 
         [Command("gold")]
