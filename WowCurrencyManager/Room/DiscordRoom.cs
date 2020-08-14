@@ -246,7 +246,7 @@ namespace WowCurrencyManager.Room
             }
         }
 
-        public async void OrderSuccess()
+        public async void OrderAccept()
         {
             var operationResult = Order.Performer.Balance - Order.Amount;
             Balance -= Order.Amount;

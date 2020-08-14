@@ -9,6 +9,10 @@ namespace WowCurrencyManager.WebDriver
 {  
     public class WaitOrder : IOperation
     {
+        public static event Action<FarmRoom> OrderFound;
+        public static event Action<FarmRoom> OrderCompleted;
+        public static event Action OrderException;
+
         private IWebDriver _driver;
         static Stopwatch _lastWatchTime = new Stopwatch();
         public FarmRoom Sender { private set; get; }
@@ -32,6 +36,9 @@ namespace WowCurrencyManager.WebDriver
                 Thread.Sleep(1000);
             }
 
+            IWebElement currentOrder = null;
+            FarmRoom currentRoom = null;
+
             try
             {
                 //Open new order
@@ -40,8 +47,7 @@ namespace WowCurrencyManager.WebDriver
                 //Check for room exist
                 var root = FarmRoomRouting.GetRoomRouting();
 
-                IWebElement currentOrder = null;
-                FarmRoom currentRoom = null;
+                
 
                 foreach (var el in newOrders)
                 {
@@ -64,10 +70,12 @@ namespace WowCurrencyManager.WebDriver
 
                 return;
 
-                RoomExist:
-                
+            RoomExist:
+
                 var operationLink = currentOrder.FindElement(By.ClassName("sales-history__product-id"));
                 operationLink.Click();
+
+                OrderFound?.Invoke(currentRoom);
 
                 //View order details
                 var btn = driver.WaitElement(By.ClassName("progress_gr"));
@@ -117,12 +125,13 @@ namespace WowCurrencyManager.WebDriver
 
                 while (myOrder.Performer == null)
                 {
-                    Thread.Sleep(500);
-                    //TODO добавить выход из цикла, если никто не примет ордер
+                    Thread.Sleep(500);                    
                 }
-                
-                driver.WaitElement(By.CssSelector(".list-action.trade__list-action3 a")).Click();
 
+                currentRoom.OrderAccept();
+                OrderCompleted?.Invoke(currentRoom);
+
+                driver.WaitElement(By.CssSelector(".list-action.trade__list-action3 a")).Click();
                 var okButton = driver.WaitElement(By.CssSelector(".btn.trade-history__btn"));
 
                 while (!okButton.Displayed)
