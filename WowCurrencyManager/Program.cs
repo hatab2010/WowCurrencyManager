@@ -84,8 +84,7 @@ namespace WowCurrencyManager
 
             room.Order.SetPerformer(room.GetClient(arg3.User.Value));
             lMessage.Result.ModifyAsync(msg => msg.Embed = room.Order.GetOrderEmbed());
-            lMessage.Result.RemoveAllReactionsAsync();
-            room.OrderSuccess();
+            lMessage.Result.RemoveAllReactionsAsync();        
 
             return Task.CompletedTask;
         }

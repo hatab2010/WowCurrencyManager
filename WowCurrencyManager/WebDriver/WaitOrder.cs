@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
+using Discord;
 using OpenQA.Selenium;
 using WowCurrencyManager.Room;
 
@@ -18,7 +22,7 @@ namespace WowCurrencyManager.WebDriver
         public FarmRoom Sender { private set; get; }
         private string _url = "https://www.g2g.com/order/sellOrder?status=5";
 
-        public void Start(IWebDriver driver)
+        public async void Start(IWebDriver driver)
         {
             _driver = driver;
 
@@ -53,7 +57,9 @@ namespace WowCurrencyManager.WebDriver
                 {
                     foreach (var room in root.Rooms)
                     {
-                        var formatedLabel = Regex.Replace(el.FindElement(By.ClassName("sales-history__product-name")).Text.ToLower(), "[’]", "");
+                        var formatedLabel = Regex
+                            .Replace(el.FindElement(By.ClassName("sales-history__product-name"))
+                            .Text.ToLower(), "[’]", "");
 
                         if (formatedLabel.Contains(room.Server) 
                             && formatedLabel.Contains(room.Fraction)
@@ -84,6 +90,9 @@ namespace WowCurrencyManager.WebDriver
                 Thread.Sleep(1000);
 
 
+                try
+                {
+                
                 var orderServer = driver.WaitElement(By.XPath(BuildXpathString("Server"))).Text;
                 driver.WaitElement(By.XPath("//a[contains(@class, 'progress_gr') and contains(text(), 'Start Trading')]"))
                    .Click();
@@ -141,6 +150,21 @@ namespace WowCurrencyManager.WebDriver
 
                 okButton.Click();
 
+                }
+                catch (Exception)
+                {
+                    var admins = await GetAdmins();
+                    if (admins != null)
+                    {
+                        foreach (var item in admins)
+                        {
+                            await item.SendMessageAsync($"Ошибка отправки ордера на :{currentRoom.Channel.Name}");
+                        }
+                    }
+
+                    throw;
+                }
+
                 var messageButton = driver.WaitElement(By.XPath("//a[contains(@target, 'g2gcw') and contains(@class, 'list-action__btn-default')]"));
                 var chatUrl = messageButton.GetAttribute("href");
                 driver.Navigate().GoToUrl(chatUrl);
@@ -174,8 +198,35 @@ namespace WowCurrencyManager.WebDriver
             }
             catch (Exception ex)
             {
+                var admins = await GetAdmins();
+                if (admins != null)
+                {
+                    var servicesUser = admins.FirstOrDefault(_ => _.Username == "Hatab2010");
+
+                    if (servicesUser != null)
+                    {
+                        await servicesUser.SendMessageAsync(ex.Message);
+                    }
+                }
+
                 Console.WriteLine(ex);
-            }    
+            }
+
+            async Task<IEnumerable<IUser>> GetAdmins()
+            {
+                if (currentRoom != null)
+                {
+                    var users = await currentRoom.Channel.GetUsersAsync().FlattenAsync();
+                    return users.Where(_ => (((IGuildUser)_)
+                       .GetPermissions((IGuildChannel)currentRoom.Channel))
+                       .ToList().Contains(ChannelPermission.ManageChannels));
+                }
+                else
+                {
+                    return null;
+                }
+                
+            }
         }
 
         private void Update()
