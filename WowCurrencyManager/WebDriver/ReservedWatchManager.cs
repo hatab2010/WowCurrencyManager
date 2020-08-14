@@ -13,13 +13,15 @@ namespace WowCurrencyManager.WebDriver
     public class ReservedWatchManager : ManagerBase
     {
         private static ReservedWatchManager _instance;
-
+        private List<FarmRoom> _roomExceptions = new List<FarmRoom>();
         private List<FarmRoom> _activeRoom;
 
         ReservedWatchManager()
         {
             CreateDriver(Global.RESERVED_PROFILE);
             Task.Run(Process);
+            WaitOrder.OrderFound += OnOrderFound;
+            WaitOrder.OrderCompleted += OnOrderCompeted;
         }
 
         internal static ReservedWatchManager InitManager()
@@ -31,6 +33,22 @@ namespace WowCurrencyManager.WebDriver
             else
             {
                 return _instance;
+            }            
+        }
+        
+
+        private void OnOrderFound(FarmRoom room)
+        {
+            _roomExceptions.Add(room);
+        }
+
+        private void OnOrderCompeted(FarmRoom room)
+        {
+            var removeRoom = _roomExceptions.FirstOrDefault(_ => _ == room);
+
+            if (removeRoom != null)
+            {
+                _roomExceptions.Remove(removeRoom);
             }
         }
 
@@ -74,10 +92,17 @@ namespace WowCurrencyManager.WebDriver
                         if (product == null)
                             continue;
 
-                       
-                        if (product.Stock != (product.Reserved + room.Balance))
+
+                        if (_roomExceptions.Contains(room) == false)
                         {
-                            product.SetAmount(room.Balance);
+                            if (product.Stock != (product.Reserved + room.Balance))
+                            {
+                                product.SetAmount(room.Balance);
+                            }
+                        }
+                        else
+                        {
+                            
                         }
                     }
 
