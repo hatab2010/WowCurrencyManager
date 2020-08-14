@@ -69,6 +69,15 @@ namespace WowCurrencyManager.Modules
         public async Task Wage(int value, [Remainder]string username)
         {
             await Context.Channel.DeleteMessageAsync(Context.Message);
+            var users = (await Context.Channel.GetUsersAsync()
+                .FlattenAsync());
+
+            var admins = users.ToList()
+                .Where(_ => ((IGuildUser)_)
+                    .GetPermissions((IGuildChannel)Context.Channel)
+                    .ToList()
+                    .Contains(ChannelPermission.ManageChannels));           
+
             var routing = FinanseRoomRouting.Get();
             var room = routing.Cash.Rooms.FirstOrDefault(_ => _.Id == Context.Channel.Id);
                    
@@ -80,10 +89,10 @@ namespace WowCurrencyManager.Modules
 
             var client = room.Clients.FirstOrDefault(_ => _.Name == username);
 
-
             var builder = new EmbedBuilder();
             var footer = new EmbedFooterBuilder();
 
+            client.AddUSDBalance(value);
             builder.WithTitle($"{Context.Channel.Name}");
             builder.WithDescription($"{client.Name}: зачеслено {value}$");
             footer.WithText($"Итоговый дебет: {client.USDBalance}");
@@ -94,8 +103,10 @@ namespace WowCurrencyManager.Modules
                 await Context.User.SendMessageAsync($"Пользователь с ником {username} не найден");
             }
 
-            client.AddUSDBalance(value);
-            await Context.User.SendMessageAsync("", false, builder.Build());
+            foreach (var item in admins)
+            {
+                await Context.User.SendMessageAsync("", false, builder.Build());
+            }            
         }
 
         [Command("sold")]
