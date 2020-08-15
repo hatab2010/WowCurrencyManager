@@ -15,6 +15,7 @@ using System.Reflection;
 using WowCurrencyManager.Room;
 using Discord.Rest;
 using WowCurrencyManager.WebDriver;
+using System.Threading;
 
 namespace WowCurrencyManager
 {
@@ -41,7 +42,7 @@ namespace WowCurrencyManager
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
 
-            string token = "NzQzMjQ4MjYwOTQwMTY5MjU3.XzR54g.-ewZuCsTWS1JLJxAxsHp9Xh6vjI";
+            string token = "NzM5NjI1NzYyNDk5NTkyMjEy.XydMKw.J4ztL_nEZrKQZFgz3Nwpv3dnEeQ";
 
             _client.Log += _client_Log;
             await RegisterCommandsAsync();
@@ -83,8 +84,9 @@ namespace WowCurrencyManager
             }
 
             room.Order.SetPerformer(room.GetClient(arg3.User.Value));
-            lMessage.Result.ModifyAsync(msg => msg.Embed = room.Order.GetOrderEmbed());
-            lMessage.Result.RemoveAllReactionsAsync();        
+            lMessage.Result.ModifyAsync(msg => msg.Embed = room.Order.GetOrderEmbed()).Wait();
+            Thread.Sleep(2000);
+            lMessage.Result.RemoveAllReactionsAsync().Wait();
 
             return Task.CompletedTask;
         }

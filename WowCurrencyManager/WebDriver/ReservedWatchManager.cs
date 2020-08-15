@@ -14,7 +14,8 @@ namespace WowCurrencyManager.WebDriver
     {
         private static ReservedWatchManager _instance;
         private List<FarmRoom> _roomExceptions = new List<FarmRoom>();
-        private List<FarmRoom> _activeRoom;
+        private List<FarmRoom> _activeRooms = new List<FarmRoom>();
+        private List<RoomReserv> _reserves = new List<RoomReserv>();
 
         ReservedWatchManager()
         {
@@ -61,56 +62,70 @@ namespace WowCurrencyManager.WebDriver
         {
             while (true)
             {
-                _activeRoom = FarmRoomRouting.GetRoomRouting().Rooms;
+                try
+                {                    
+                    _activeRooms = FarmRoomRouting.GetRoomRouting().Rooms;
 
-                if (_activeRoom.Count == 0) continue;
+                    if (_activeRooms.Count == 0) continue;
 
-                var worldParts = _activeRoom
-                    .Select(_ => _.WordPart)
-                    .Distinct();
+                    var worldParts = _activeRooms
+                        .Select(_ => _.WordPart)
+                        .Distinct();
 
-                foreach (var part in worldParts)
-                {
-                    var activeRoomInPage = _activeRoom.Where(_ => _.WordPart == part);
-
-                    switch (part)
+                    foreach (var part in worldParts)
                     {
-                        case "eu":
-                            _driver.Navigate().GoToUrl(Global.INTERNAL_OREDER_EU);
-                            break;
+                        var activeRoomInPage = _activeRooms.Where(_ => _.WordPart == part);
 
-                        case "us":
-                            _driver.Navigate().GoToUrl(Global.INTERNAL_ORDER_US);
-                            break;
-                    }
-
-
-                    foreach (var room in activeRoomInPage)
-                    {
-                        var product = _driver.FindProductEl(room.Server, room.Fraction);
-
-                        if (product == null)
-                            continue;
-
-
-                        if (_roomExceptions.Contains(room) == false)
+                        switch (part)
                         {
-                            if (product.Stock != (product.Reserved + room.Balance))
+                            case "eu":
+                                _driver.Navigate().GoToUrl(Global.INTERNAL_OREDER_EU);
+                                break;
+
+                            case "us":
+                                _driver.Navigate().GoToUrl(Global.INTERNAL_ORDER_US);
+                                break;
+                        }
+
+                        foreach (var room in activeRoomInPage)
+                        {
+                            var product = _driver.FindProductEl(room.Server, room.Fraction);
+
+                            if (product != null)
                             {
-                                product.SetAmount(room.Balance);
-                            }
+                                var cashRoomReserv = _reserves.FirstOrDefault(_ => _.Name == product.Title);
+
+                                if (cashRoomReserv == null)
+                                {
+                                    _reserves.Add(new RoomReserv() { Name = product.Title, Reserve = product.Reserved });
+                                }
+                                else
+                                {
+                                    if (cashRoomReserv.Reserve > product.Reserved)
+                                    {
+                                        product.SetAmount(room.Balance);
+                                        cashRoomReserv.Reserve = product.Reserved;
+                                    }
+                                }
+                            }                                                     
                         }
-                        else
-                        {
-                            
-                        }
+
                     }
-
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }                
 
-                Thread.Sleep(15000);
+                Thread.Sleep(10000);
             }
         }
 
+    }
+
+    public class RoomReserv
+    {
+        public string Name;
+        public int Reserve;
     }
 }

@@ -16,6 +16,7 @@ namespace WowCurrencyManager.WebElement
         private string _server;
         private string _fraction;
         public int Reserved { private set; get; }
+        public string Title { private set; get; }
         public int Stock { private set; get; }
 
         private IWebElement _instance;
@@ -31,39 +32,47 @@ namespace WowCurrencyManager.WebElement
 
         void findEl()
         {
-            var Orders = _driver.WaitElements(By.ClassName("manage__table-row"));
-
-            foreach (var parentEL in Orders)
+            try
             {
-                string serverName;
-                try
-                {
-                    serverName = parentEL.FindElement(By.ClassName("products__name")).Text;
-                }
-                catch (Exception)
-                {
-                    continue;
-                }
-                
-                var formatLabel = serverName.FormatesServerName();
-                var isCurrent = Regex.IsMatch(formatLabel, $@"{_server} \[\w*\] - {_fraction}");
+                var Orders = _driver.WaitElements(By.ClassName("manage__table-row"));
 
-                if (isCurrent)
+                foreach (var parentEL in Orders)
                 {
-                    _instance = parentEL;
-                    break;
+                    string serverName;
+                    try
+                    {
+                        serverName = parentEL.FindElement(By.ClassName("products__name")).Text;
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+
+                    var formatLabel = serverName.FormatesServerName();
+                    var isCurrent = Regex.IsMatch(formatLabel, $@"{_server} \[\w*\] - {_fraction}");
+
+                    if (isCurrent)
+                    {
+                        _instance = parentEL;
+                        break;
+                    }
+
                 }
-           
+
+                var reservedEl = _instance.FindElements(By.ClassName("products__description-item"))
+                        .FirstOrDefault(_ => _.Text.Contains("Reserved"))
+                        .FindElement(By.ClassName("products__description-info"));
+
+                var quantityEl =
+
+                Reserved = int.Parse(reservedEl.Text);
+                Stock = int.Parse(_instance.FindElement(By.ClassName("g2g_actual_quantity")).Text);
+                Title = _instance.FindElement(By.ClassName("products__name")).Text;
             }
+            catch (Exception)
+            {
 
-            var reservedEl = _instance.FindElements(By.ClassName("products__description-item"))
-                    .FirstOrDefault(_ => _.Text.Contains("Reserved"))
-                    .FindElement(By.ClassName("products__description-info"));
-
-            var quantityEl = 
-
-            Reserved = int.Parse(reservedEl.Text);
-            Stock = int.Parse(_instance.FindElement(By.ClassName("g2g_actual_quantity")).Text);
+            }
         }
 
         public void Interaction(Action<IWebElement> action)

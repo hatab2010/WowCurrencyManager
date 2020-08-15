@@ -61,7 +61,7 @@ namespace WowCurrencyManager.Room
         {
             var builder = new EmbedBuilder();
             var footer = new EmbedFooterBuilder();
-            footer.Text = $"общий дебет: {Balance}";
+            footer.Text = $"Всего продано: {Balance}";
 
             builder.WithDescription($"{Name} продал: {value}");
             builder.Color = Color.Blue;
@@ -74,7 +74,7 @@ namespace WowCurrencyManager.Room
         public Embed BalanceBuild()
         {
             var builder = new EmbedBuilder();
-            builder.WithDescription($"{Name} общий дебет: {Balance}");
+            builder.WithDescription($"{Name} всего продано: {Balance}");
             builder.Color = Color.Blue;
 
             return builder.Build();
@@ -93,7 +93,7 @@ namespace WowCurrencyManager.Room
         {
             var builder = new EmbedBuilder();
             var footer = new EmbedFooterBuilder();
-            footer.Text = $"общий дебет: {Balance}";
+            footer.Text = $"Всего продано: {Balance}";
 
             builder.WithDescription($"{Name} отменил: {value}");
             builder.Color = Color.DarkBlue;
@@ -105,7 +105,7 @@ namespace WowCurrencyManager.Room
         public Embed PayEmbedBuild()
         {
             var builder = new EmbedBuilder();
-            builder.WithDescription($"{Name} итоговый дебет: {Balance}");
+            builder.WithDescription($"{Name} ОПЛАЧЕНО: {Balance}");
             return builder.Build();
         }
     }

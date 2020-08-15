@@ -97,48 +97,56 @@ namespace WowCurrencyManager.WebDriver
         {
             while (true)
             {
-                if (_opertions.Count != 0)
+                try
                 {
-                    IOperation curOperation;
-
-                    lock (_opertions)
+                    if (_opertions.Count != 0)
                     {
-                        curOperation = _opertions.FirstOrDefault();
-                    }
-
-                    if (curOperation != null)
-                    {
-                        var isSuccess = false;
-
-                        do
-                        {
-                            try
-                            {
-                                curOperation.Start(_driver);
-                                isSuccess = true;
-                            }
-                            catch (Exception ex)
-                            {
-                                Task.Delay(15000).Wait();
-                            }
-
-                        } while (!isSuccess);
-                        
+                        IOperation curOperation;
 
                         lock (_opertions)
                         {
-                            _opertions.Remove(curOperation);
+                            curOperation = _opertions.FirstOrDefault();
+                        }
+
+                        if (curOperation != null)
+                        {
+                            var isSuccess = false;
+
+                            do
+                            {
+                                try
+                                {
+                                    curOperation.Start(_driver);
+                                    isSuccess = true;
+                                }
+                                catch (Exception ex)
+                                {
+                                    Task.Delay(15000).Wait();
+                                }
+
+                            } while (!isSuccess);
+
+
+                            lock (_opertions)
+                            {
+                                _opertions.Remove(curOperation);
+                            }
                         }
                     }
-                }
-                else
-                {
-                    lock (_opertions)
+                    else
                     {
-                        _opertions.Add(new WaitOrder());
-                    }
+                        lock (_opertions)
+                        {
+                            _opertions.Add(new WaitOrder());
+                        }
 
-                }                
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                      
             }
         }
 
