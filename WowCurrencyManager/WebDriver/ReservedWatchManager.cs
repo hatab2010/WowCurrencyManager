@@ -103,9 +103,10 @@ namespace WowCurrencyManager.WebDriver
                                 {
                                     if (cashRoomReserv.Reserve > product.Reserved)
                                     {
-                                        product.SetAmount(room.Balance);
-                                        cashRoomReserv.Reserve = product.Reserved;
+                                        product.SetAmount(room.Balance);                                        
                                     }
+
+                                    cashRoomReserv.Reserve = product.Reserved;
                                 }
                             }                                                     
                         }
