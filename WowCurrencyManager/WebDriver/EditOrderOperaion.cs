@@ -120,6 +120,8 @@ namespace WowCurrencyManager.WebDriver
             {
                 order.SetPrice(Sender.MinLos);
             }
+
+            Thread.Sleep(2000);
             order.SetAmount(Sender.Balance);            
             
             void selectOption(IWebElement handler, string selectItem)
