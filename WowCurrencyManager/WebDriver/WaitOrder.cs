@@ -170,22 +170,24 @@ namespace WowCurrencyManager.WebDriver
                 driver.Navigate().GoToUrl(chatUrl);
 
                 //Send message to byer
-                var messageStr = "Hello friend, gold sent expect 1 hour and get your order please " +
-                    "give a good rating and follow me we have the fastest delivery and cheaper gold, 200% " +
-                    "safe gold, handmade. We do not buy gold on other sites or from other sellers! even if" +
-                    " gold is not available, you can write to us and we completed your order as soon as possible" +
-                    "waiting for you again ";
+                var messageStr = "hello friend, Gold has been sent" +
+" expect 1 hour and get your order" +
+" please give a good rating and follow me" +
+" we have the fastest delivery and cheaper gold, 200 % safe gold, handmade.We do not buy" +
+" gold on other sites or from other sellers!even if gold is not available, you can write" +
+" to us and we completed your order as soon as possible" +
+" waiting for you again ";
 
                 var secondMessage = "Hello my dear friend. Gold has been sent, wait an hour. If you like our services, " +
                     "please give us a good rating and follow us. Come back soon. Good luck to you";
 
                 driver.WaitElement(By.TagName("textarea"));
 
-                Thread.Sleep(3000);
+                Thread.Sleep(5000);
 
                 try
                 {
-                    driver.FindElement(By.XPath("//span[contains(@class, 'Linkify') and contains(text(), 'Hello friend,')]"));
+                    driver.FindElement(By.XPath("//span[contains(@class, 'Linkify') and contains(text(), 'Gold has been sent')]"));
                     driver.WaitElement(By.TagName("textarea")).SendKeys(secondMessage);
                 }
                 catch (Exception)
