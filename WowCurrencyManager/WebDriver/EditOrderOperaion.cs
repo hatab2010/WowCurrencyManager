@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using OpenQA.Selenium;
@@ -91,7 +92,15 @@ namespace WowCurrencyManager.WebDriver
                 }
             }
 
-            var lowPriceVlue = decimal.Parse(Regex.Match(priceEl.Text, @"\d*[.]\d*").Value.Replace(".", ","));
+            Console.WriteLine(priceEl.Text);
+            Console.WriteLine(Decimal.Parse(Regex.Match(priceEl.Text, @"\d*[.]\d*").Value,
+                NumberStyles.Currency,
+                CultureInfo.InvariantCulture));
+
+            var lowPriceVlue = Decimal.Parse(Regex.Match(priceEl.Text, @"\d*[.]\d*").Value,
+                NumberStyles.Currency,
+                CultureInfo.InvariantCulture);
+
 
             //Go to the my order page
             switch (worldPart)

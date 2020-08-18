@@ -172,6 +172,42 @@ namespace WowCurrencyManager.Modules
 
             return room;
         }
+
+        [Command("add")]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task Create([Remainder]string name)
+        {
+            await Context.Channel.DeleteMessageAsync(Context.Message);
+
+            var users = await Context.Channel.GetUsersAsync().FlattenAsync();            
+
+            var addedUser = users.FirstOrDefault(_ => _.Username == name);
+
+            if (addedUser != null)
+            {
+                var room = RouteRoom();
+                var client = room.Clients.ToList().FirstOrDefault(_ => _.Name == addedUser.Username);
+
+                var builder = new EmbedBuilder();
+                builder.WithTitle($"{Context.Channel.Name}");
+                builder.WithDescription($"добавлен пользователь {addedUser.Username}");
+
+                if (client == null)
+                {
+                    client = new FinanceClient(addedUser.Id, addedUser.Username);                   
+                    room.AddClient(client);
+
+                    await Context.User.SendMessageAsync("", false, builder.Build());
+                }
+                else
+                {
+                    builder.WithDescription($"{addedUser.Username} уже существует");
+                    await Context.User.SendMessageAsync("", false, builder.Build());
+                }
+                
+            }
+        }
     }
 
     public class ForAllCommands : ModuleBase<SocketCommandContext>

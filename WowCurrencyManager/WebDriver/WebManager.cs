@@ -36,9 +36,10 @@ namespace WowCurrencyManager.WebDriver
         protected void CreateDriver(string dirPath)
         {
             var options = new ChromeOptions();
+            var services = ChromeDriverService.CreateDefaultService();
 
             options.AddArgument($"--user-data-dir={dirPath}");
-            _driver = new ChromeDriver(options);
+            _driver = new ChromeDriver(services, options, TimeSpan.FromSeconds(600));
             _driver.Manage().Timeouts().ImplicitWait = new TimeSpan(15000);
         }
 
