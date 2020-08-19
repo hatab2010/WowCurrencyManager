@@ -177,10 +177,24 @@ namespace WowCurrencyManager.Room
 
         public async void SendOrderInChannle(G2gOrder order)
         {
-            Emoji react = new Emoji("💰");
-            var message = await Channel.SendMessageAsync("", false, order.GetOrderEmbed());
+            try
+            {
+                await send();
+            }
+            catch (Exception)
+            {
+                await Task.Delay(60000);
+                await send();
+            }
 
-            await message.AddReactionAsync(react);
+            async Task send()
+            {
+                Emoji react = new Emoji("💰");
+                var message = await Channel.SendMessageAsync("", false, order.GetOrderEmbed());
+
+                await message.AddReactionAsync(react);
+            }
+            
         }
 
         public async Task SendBalanceMessage()

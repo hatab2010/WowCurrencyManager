@@ -47,6 +47,29 @@ namespace WowCurrencyManager
             }
         }
 
+        public static IWebElement WaitElement(this IWebDriver driver, By findeOption, int second)
+        {
+            var timer = second * 1000;
+
+            while (true)
+            {
+                try
+                {
+                    return driver.FindElement(findeOption);
+                }
+                catch (Exception)
+                {
+                    Thread.Sleep(1000);
+                    timer -= 1000;
+
+                    if (timer < 0)
+                    {
+                        throw;
+                    }
+                }
+            }
+        }
+
         public static PinnedElement GetPinnedElement(this IWebDriver driver, By findeOption)
         {
             return new PinnedElement(driver, findeOption);

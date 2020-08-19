@@ -19,8 +19,9 @@ namespace WowCurrencyManager.Model
 
         public Embed GetOrderEmbed()
         {
-            var builder = new EmbedBuilder();             
+            var builder = new EmbedBuilder();
 
+            builder.WithDescription("@everyone notifi");
             builder.WithTitle($"{Server}");
             builder.AddField("Order", OrderId, false);
             builder.AddField("Gold", Amount, false);
