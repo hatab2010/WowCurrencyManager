@@ -216,7 +216,9 @@ namespace WowCurrencyManager.Modules
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         public async Task Clear()
         {
-            var messages = Context.Channel.GetMessagesAsync(300)
+            await Context.Channel.DeleteMessageAsync(Context.Message);
+
+            var messages = Context.Channel.GetMessagesAsync(7)
                 .FlattenAsync();
             foreach (var item in await messages)
             {
@@ -287,6 +289,22 @@ namespace WowCurrencyManager.Modules
 
                 await room.SendBalanceMessage();
             }                        
+        }
+
+        [Command("cancel")]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
+        [RequireUserPermission(GuildPermission.Administrator)]
+
+        public async Task Cancel()
+        {
+            var routing = FarmRoomRouting.GetRoomRouting();
+            var room = routing.GetRoom(Context.Channel);
+
+            if (room.Order != null)
+            {
+                room.Order.IsCansel = true;
+                await Context.Channel.DeleteMessageAsync(room.Order.OrderMessageId);
+            }
         }
 
         [Command("wipe")]

@@ -193,8 +193,8 @@ namespace WowCurrencyManager.Room
                 var message = await Channel.SendMessageAsync("", false, order.GetOrderEmbed());
 
                 await message.AddReactionAsync(react);
-            }
-            
+                order.OrderMessageId = message.Id;
+            }            
         }
 
         public async Task SendBalanceMessage()

@@ -135,6 +135,9 @@ namespace WowCurrencyManager.WebDriver
                     while (myOrder.Performer == null)
                     {
                         Thread.Sleep(500);
+
+                        if (myOrder.IsCansel == true)
+                            throw new Exception("Ордер был отменён");
                     }
 
                     currentRoom.OrderAccept();
@@ -227,7 +230,6 @@ namespace WowCurrencyManager.WebDriver
                 {
                     return null;
                 }
-
             }
         }
 

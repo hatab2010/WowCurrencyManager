@@ -5,6 +5,8 @@ namespace WowCurrencyManager.Model
 {
     public class G2gOrder
     {
+        public bool IsCansel = false;
+        public ulong OrderMessageId;
         public string OrderId;
         public string Server;
         public string Fraction;
@@ -21,7 +23,6 @@ namespace WowCurrencyManager.Model
         {
             var builder = new EmbedBuilder();
 
-            builder.WithDescription("@everyone notifi");
             builder.WithTitle($"{Server}");
             builder.AddField("Order", OrderId, false);
             builder.AddField("Gold", Amount, false);
