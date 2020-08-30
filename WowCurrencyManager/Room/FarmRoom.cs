@@ -228,13 +228,22 @@ namespace WowCurrencyManager.Room
 
             if (channelMessages.Count > 0
                 && LastBalanceMessage != null
+                && !String.IsNullOrEmpty(channelMessages.Last().Content)
                 && channelMessages.Last().Id == LastBalanceMessage.Id)
             {
                 await LastBalanceMessage.ModifyAsync(msg => msg.Embed = builder.Build());
             }
             else if (LastBalanceMessage != null)
             {
-                await Channel.DeleteMessageAsync(LastBalanceMessage);
+                try
+                {
+                    await Channel.DeleteMessageAsync(LastBalanceMessage);
+                }
+                catch (Exception)
+                {
+
+                }
+                
                 LastBalanceMessage = await Channel.SendMessageAsync("", false, builder.Build());
             }
             else
