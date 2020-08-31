@@ -107,6 +107,7 @@
     <Compile Include="WebDriver\EditOrderOperaion.cs" />
     <Compile Include="Global.cs" />
     <Compile Include="WebDriver\IOperation.cs" />
+    <Compile Include="WebDriver\ManagerBase.cs" />
     <Compile Include="WebDriver\OperationBase.cs" />
     <Compile Include="WebDriver\ReservedWatchManager.cs" />
     <Compile Include="WebDriver\WaitOrder.cs" />

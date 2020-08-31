@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -15,70 +14,10 @@ using WowCurrencyManager.WebElement;
 
 namespace WowCurrencyManager.WebDriver
 {
-    enum OperationPage
-    {
-        MyOrders,
-        Currency,
-        ExternalOrder,
-        OrderProcess,
-        SendMessage
-    }
-
-    public interface IBalance
-    {
-        int Balance { get; }
-    }
-
-    public class ManagerBase
-    {
-        protected IWebDriver _driver;
-
-        protected void CreateDriver(string dirPath)
-        {
-            var options = new ChromeOptions();
-            var services = ChromeDriverService.CreateDefaultService();
-
-            options.AddArgument($"--user-data-dir={dirPath}");
-            _driver = new ChromeDriver(services, options, TimeSpan.FromSeconds(600));
-            _driver.Manage().Timeouts().ImplicitWait = new TimeSpan(15000);
-        }
-
-    }
-
-    public class WotchReserved
-    {
-        enum WordPartType
-        {
-            EU, US
-        }
-
-        private List<FarmRoom> activeRooms = new List<FarmRoom>();
-
-        public void Start(IWebDriver driver)
-        {
-            activeRooms = FarmRoomRouting.GetRoomRouting().Rooms;
-
-            string[] watchetOrdersPages = { "https://www.g2g.com/sell/manage?service=1&game=27815",
-                "https://www.g2g.com/sell/manage?service=1&game=27816" };
-
-            foreach (var page in watchetOrdersPages)
-            {
-                //activeRooms[0].WordPart;
-                //driver.Navigate().GoToUrl(page);                
-
-                foreach (var activeRoom in activeRooms)
-                {
-                    
-                }
-            }                       
-        }
-    }
-
     public class WebManager : ManagerBase
     {
         public static Action<ProfileStatus> Logged;
-        private static WebManager _instance;
-        private List<IOperation> _opertions = new List<IOperation>();
+        private static WebManager _instance;        
 
         public WebManager()
         {
@@ -92,63 +31,6 @@ namespace WowCurrencyManager.WebDriver
         void OnStoped()
         {
             _driver?.Dispose();
-        }
-
-        private void Process()
-        {
-            while (true)
-            {
-                try
-                {
-                    if (_opertions.Count != 0)
-                    {
-                        IOperation curOperation;
-
-                        lock (_opertions)
-                        {
-                            curOperation = _opertions.FirstOrDefault();
-                        }
-
-                        if (curOperation != null)
-                        {
-                            var isSuccess = false;
-
-                            do
-                            {
-                                try
-                                {
-                                    curOperation.Start(_driver);
-                                    isSuccess = true;
-                                }
-                                catch (Exception ex)
-                                {
-                                    Task.Delay(15000).Wait();
-                                }
-
-                            } while (!isSuccess);
-
-
-                            lock (_opertions)
-                            {
-                                _opertions.Remove(curOperation);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        lock (_opertions)
-                        {
-                            _opertions.Add(new WaitOrder());
-                        }
-
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-                      
-            }
         }
 
         private void OnOrderChanged(FarmRoom room)
@@ -195,12 +77,12 @@ namespace WowCurrencyManager.WebDriver
                     }
 
                     _driver.Quit();
-                    ReservedWatchManager.CreateProfile();
-                    ReservedWatchManager.InitManager();
+                    OrderWatchManager.CreateProfile();
+                    OrderWatchManager.InitManager();
                     CreateDriver(Global.MANAGER_PROFILE);
                     break;
                 case ProfileStatus.Old:
-                    ReservedWatchManager.InitManager();
+                    OrderWatchManager.InitManager();
                     break;
             }            
         }
@@ -231,13 +113,5 @@ namespace WowCurrencyManager.WebDriver
     public enum ProfileStatus
     {
         New, Old
-    }
-
-    public class WebBot : ChromeDriver
-    {
-        public WebBot()
-        {
-            
-        }
     }
 }

@@ -125,10 +125,12 @@ namespace WowCurrencyManager.WebElement
         }
 
         public void SetAmount(int value)
-        {
+        {          
             if (value > 400)
             {
                 SetStateOrder(true);
+
+                if (value <= Reserved) return;
 
                 Interaction((el) =>
                 {
@@ -137,7 +139,7 @@ namespace WowCurrencyManager.WebElement
 
                     var StockInput = _driver.WaitElement(By.CssSelector(".editable-input > input"));
                     StockInput.Clear();
-                    StockInput.SendKeys((value + Reserved).ToString());
+                    StockInput.SendKeys((value).ToString());
 
                     _driver.FindElement(By.CssSelector(".btn.btn--green.editable-submit")).Click();
                 });

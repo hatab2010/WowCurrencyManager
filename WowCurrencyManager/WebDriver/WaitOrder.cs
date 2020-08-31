@@ -22,7 +22,12 @@ namespace WowCurrencyManager.WebDriver
         public FarmRoom Sender { private set; get; }
         private string _url = "https://www.g2g.com/order/sellOrder?status=5";
 
-        public async void Start(IWebDriver driver)
+        public void Start(IWebDriver driver)
+        {
+            AsyncStart(driver).Wait();
+        }
+
+        private async Task AsyncStart(IWebDriver driver)
         {
             _driver = driver;
 
@@ -89,10 +94,8 @@ namespace WowCurrencyManager.WebDriver
                 btn.Click();
                 Thread.Sleep(1000);
 
-
                 try
                 {
-
                     var orderServer = driver.WaitElement(By.XPath(BuildXpathString("Server"))).Text;
                     driver.WaitElement(By.XPath("//a[contains(@class, 'progress_gr') and contains(text(), 'Start Trading')]"))
                        .Click();
@@ -154,14 +157,14 @@ namespace WowCurrencyManager.WebDriver
                     okButton.Click();
 
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     var admins = await GetAdmins();
                     if (admins != null)
                     {
                         foreach (var item in admins)
                         {
-                            await item.SendMessageAsync($"Ошибка отправки ордера на :{currentRoom.Channel.Name}");
+                            await item.SendMessageAsync($"Ошибка отправки ордера на :{currentRoom.Channel.Name}  (ex: {ex.Message})");
                         }
                     }
 
@@ -224,7 +227,8 @@ namespace WowCurrencyManager.WebDriver
                     var users = await currentRoom.Channel.GetUsersAsync().FlattenAsync();
                     return users.Where(_ => (((IGuildUser)_)
                        .GetPermissions((IGuildChannel)currentRoom.Channel))
-                       .ToList().Contains(ChannelPermission.ManageChannels));
+                       .ToList().Contains(ChannelPermission.ManageChannels)
+                       && _.IsBot == false);
                 }
                 else
                 {
