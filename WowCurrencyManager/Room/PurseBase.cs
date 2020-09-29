@@ -15,5 +15,10 @@ namespace WowCurrencyManager.Room
         {
             Balance = value;
         }
+
+        public void SetName(string name)
+        {
+            Name = name;
+        }
     }
 }

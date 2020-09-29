@@ -27,7 +27,7 @@ namespace WowCurrencyManager.Model
             builder.AddField("Order", OrderId, false);
             builder.AddField("Gold", Amount, false);
             builder.AddField("Buyer", Buyer, false);
-            builder.WithThumbnailUrl("https://cdn.discordapp.com/attachments/742113122592227450/742723748485922826/hideaway-logo-final-flat-max.jpg");
+            builder.WithThumbnailUrl("https://cdn.discordapp.com/attachments/739498423958372362/757573166347321405/Logo.jpg");
 
             if (Performer != null)
             {

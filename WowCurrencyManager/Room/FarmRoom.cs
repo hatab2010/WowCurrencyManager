@@ -93,15 +93,13 @@ namespace WowCurrencyManager.Room
         {
             MinLos = value;
 
-            var builder = new EmbedBuilder();
-
             return GetMinimalPriceEmbed();
         }
 
         public Embed GetMinimalPriceEmbed()
         {
             var builder = new EmbedBuilder();
-            builder.Description = $"{Server.FirstCharUp()} [{WordPart}] {Fraction}";
+            builder.AddField("server", $"{Name}");
             builder.AddField("minimal price:", $"{MinLos} USD");
 
             return builder.Build();
@@ -126,7 +124,12 @@ namespace WowCurrencyManager.Room
             }
             else
             {
-                return client;
+                if (client.Name != user.Username)
+                {
+                    client.SetName(user.Username);
+                }
+
+                return client;                
             }
         }
 

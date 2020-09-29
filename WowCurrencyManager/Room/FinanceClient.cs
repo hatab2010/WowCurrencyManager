@@ -9,16 +9,18 @@ namespace WowCurrencyManager.Room
         static public Action Changed;
         private int balance;
         private int uSDBalance;
+        private string _name;
 
         public int Balance
         {
-            get => balance; private
-            set
+            get => balance;
+            private set
             {
                 balance = value;
                 Changed?.Invoke();
             }
         }
+
         public ulong Id { private set; get; }
         public int USDBalance
         {
@@ -29,7 +31,16 @@ namespace WowCurrencyManager.Room
                 Changed?.Invoke();
             }
         }
-        public string Name { private set; get; }
+
+        public string Name {
+            get => _name;
+            private set
+            {
+                _name = value;
+                Changed?.Invoke();
+            }
+        }
+
         public FinanceClient(ulong id, string name)
         {
             Id = id;
@@ -55,6 +66,11 @@ namespace WowCurrencyManager.Room
         internal void RemoveBalance(int value)
         {
             Balance -= value;
+        }
+
+        public void SetName(string name)
+        {
+            Name = name;
         }
 
         public Embed SellEmbedBuild(int value)

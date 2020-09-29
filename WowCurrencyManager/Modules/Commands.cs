@@ -90,17 +90,16 @@ namespace WowCurrencyManager.Modules
             await Context.Channel.DeleteMessageAsync(Context.Message);                              
 
             var routing = FinanseRoomRouting.Get();
-            var room = routing.Cash.Rooms.FirstOrDefault(_ => _.Id == Context.Channel.Id);
+            var client = routing.Cash.Rooms?
+                .SelectMany(_ => _.Clients)?
+                .FirstOrDefault(_ => _.Name == username);
                    
-            if (room == null)
+            if (client == null)
             {
-                await Context.User.SendMessageAsync($"Ошибка запроса: комната не была инициализирована");
+                await Context.Channel.SendMessageAsync($"Пользователь {username} не найден");
                 return;
             }
-
-            var client = room.Clients.FirstOrDefault(_ => _.Name == username);
-
-            if (client != null)
+            else
             {
                 var builder = new EmbedBuilder();
                 var footer = new EmbedFooterBuilder();
@@ -111,25 +110,33 @@ namespace WowCurrencyManager.Modules
                 footer.WithText($"Итоговый дебет: {client.USDBalance}");
                 builder.WithFooter(footer);
 
-                if (client == null)
-                {
-                    await Context.User.SendMessageAsync($"Пользователь с ником {username} не найден");
-                }
-
-                var admins = await GetAdmins();
-
-                foreach (var item in admins)
-                {
-                    if (item.IsBot == false)
-                        await item.SendMessageAsync("", false, builder.Build());
-                }
+                await Context.Channel.SendMessageAsync("", false, builder.Build());
             }         
+        }
+
+        [Command("wage")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task Wage()
+        {
+            await Context.Channel.DeleteMessageAsync(Context.Message);
+
+            var routing = FinanseRoomRouting.Get();
+            var clients = routing.Cash.Rooms?
+                .SelectMany(_ => _.Clients);
+            var str = new StringBuilder();
+
+            foreach (var client in clients)
+            {
+                str.AppendLine($"Name: {client.Name} - {client.USDBalance} USD");
+            }
+
+            await Context.Channel.SendMessageAsync(str.ToString());
         }
 
         [Command("sold")]
         public async Task Sold(int value)
         {
-            var client = RoutClient();            
+            var client = FindClient();            
             client.AddBalance(value);
 
             await Context.Message.DeleteAsync();
@@ -139,25 +146,29 @@ namespace WowCurrencyManager.Modules
         [Command("remove")]
         public async Task Remove(int value)
         {            
-            var client = RoutClient();
+            var client = FindClient();
             client.RemoveBalance(value);
 
             await Context.Message.DeleteAsync();
             await Context.Channel.SendMessageAsync("", false, client.RemoveEmbedBuilder(value));
         }
 
-        private FinanceClient RoutClient()
+        private FinanceClient FindClient()
         {
             var room = RouteRoom();
 
-            var clietn = room.Clients.FirstOrDefault(_ => _.Id == Context.User.Id);
-            if (clietn == null)
+            var client = room.Clients.FirstOrDefault(_ => _.Id == Context.User.Id);
+            if (client == null)
             {
-                clietn = new FinanceClient(Context.User.Id, Context.User.Username);
-                room.AddClient(clietn);
+                client = new FinanceClient(Context.User.Id, Context.User.Username);
+                room.AddClient(client);
+            }
+            else if (client.Name != Context.User.Username)
+            {
+                client.SetName(Context.User.Username);
             }
 
-            return clietn;
+            return client;
         }
 
         private FinanceRoom RouteRoom()
@@ -355,14 +366,21 @@ namespace WowCurrencyManager.Modules
         [Command("minimal")]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [RequireUserPermission(GuildPermission.Administrator)]
-        public async Task Minimal(decimal value)
+        public async Task Minimal(decimal value, string channelName)
         {           
-
             await Context.Channel.DeleteMessageAsync(Context.Message);
             var routing = FarmRoomRouting.GetRoomRouting();
-            var room = routing.GetRoom(Context.Channel);
-            var embed = room.SetMinLos(value);
-            await Context.User.SendMessageAsync("", false, embed);
+            var room = routing.Rooms.FirstOrDefault(_=>_.Name.ToLower().Contains(channelName.ToLower()));
+
+            if (room == null)
+            {
+                await Context.Channel.SendMessageAsync($"Сервер {channelName} не был найден");
+            }
+            else
+            {
+                var embed = room.SetMinLos(value);
+                await Context.Channel.SendMessageAsync("", false, embed);
+            }
         }
 
         [Command("minimal")]
@@ -370,12 +388,24 @@ namespace WowCurrencyManager.Modules
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task Minimal()
         {
+            await Context.Channel.DeleteMessageAsync(Context.Message);            
+            var embed = new EmbedBuilder();
+            embed.WithTitle("Минимальные ставки");
+            var rooms = FarmRoomRouting.GetRoomRouting().Rooms;
 
-            await Context.Channel.DeleteMessageAsync(Context.Message);
-            var routing = FarmRoomRouting.GetRoomRouting();
-            var room = routing.GetRoom(Context.Channel);
-            var embed = room.GetMinimalPriceEmbed();
-            await Context.User.SendMessageAsync("", false, embed);
+            foreach (var room in rooms)
+            {
+                try
+                {
+                    embed.AddField(room.Name, room.MinLos, false);
+                }
+                catch
+                {
+
+                }                
+            }
+
+            await Context.Channel.SendMessageAsync("", false, embed.Build());
         }
 
         [Command("update")]        
