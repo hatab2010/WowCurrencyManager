@@ -266,7 +266,7 @@ namespace WowCurrencyManager.Modules
         public async Task Gold(int value)
         {
             await Context.Channel.DeleteMessageAsync(Context.Message);
-            var routing = FarmRoomRouting.GetRoomRouting();
+            var routing = FarmRoomManager.GetRoomRouting();
 
             var room = routing.GetRoom(Context.Channel);
             var client = room.GetClient(Context.User);
@@ -291,7 +291,7 @@ namespace WowCurrencyManager.Modules
 
             if (addedUser != null)
             {
-                var routing = FarmRoomRouting.GetRoomRouting();
+                var routing = FarmRoomManager.GetRoomRouting();
                 var room = routing.GetRoom(Context.Channel);
                 var client = room.GetClient(addedUser);
 
@@ -308,7 +308,7 @@ namespace WowCurrencyManager.Modules
 
         public async Task Cancel()
         {
-            var routing = FarmRoomRouting.GetRoomRouting();
+            var routing = FarmRoomManager.GetRoomRouting();
             var room = routing.GetRoom(Context.Channel);
 
             if (room.Order != null)
@@ -324,7 +324,7 @@ namespace WowCurrencyManager.Modules
         public async Task Wipe()
         {
             await Context.Channel.DeleteMessageAsync(Context.Message);
-            var routing = FarmRoomRouting.GetRoomRouting();
+            var routing = FarmRoomManager.GetRoomRouting();
 
             var room = routing.GetRoom(Context.Channel);
             room.RemoveAll();
@@ -337,9 +337,9 @@ namespace WowCurrencyManager.Modules
         public async Task Set(int gold, [Remainder]string username)
         {   
             await Context.Channel.DeleteMessageAsync(Context.Message);
-            var routing = FarmRoomRouting.GetRoomRouting();
+            var routing = FarmRoomManager.GetRoomRouting();
             var room = routing.GetRoom(Context.Channel);
-            var selectClient = room.Clients.FirstOrDefault(_ => _.Name == username);
+            var selectClient = room.Cash._clients.FirstOrDefault(_ => _.Name == username);
             
             if (selectClient == null)
             {
@@ -357,7 +357,7 @@ namespace WowCurrencyManager.Modules
         public async Task Disable()
         {
             await Context.Channel.DeleteMessageAsync(Context.Message);
-            var routing = FarmRoomRouting.GetRoomRouting();
+            var routing = FarmRoomManager.GetRoomRouting();
 
             var room = routing.GetRoom(Context.Channel);
             room.RemoveClient(Context.User.Id);
@@ -369,7 +369,7 @@ namespace WowCurrencyManager.Modules
         public async Task Minimal(decimal value, string channelName)
         {           
             await Context.Channel.DeleteMessageAsync(Context.Message);
-            var routing = FarmRoomRouting.GetRoomRouting();
+            var routing = FarmRoomManager.GetRoomRouting();
             var room = routing.Rooms.FirstOrDefault(_=>_.Name.ToLower().Contains(channelName.ToLower()));
 
             if (room == null)
@@ -391,7 +391,7 @@ namespace WowCurrencyManager.Modules
             await Context.Channel.DeleteMessageAsync(Context.Message);            
             var embed = new EmbedBuilder();
             embed.WithTitle("Минимальные ставки");
-            var rooms = FarmRoomRouting.GetRoomRouting().Rooms;
+            var rooms = FarmRoomManager.GetRoomRouting().Rooms;
 
             foreach (var room in rooms)
             {
@@ -414,7 +414,7 @@ namespace WowCurrencyManager.Modules
         public async Task Update(int value)
         {
             await Context.Channel.DeleteMessageAsync(Context.Message);
-            var routing = FarmRoomRouting.GetRoomRouting();
+            var routing = FarmRoomManager.GetRoomRouting();
 
             var room = routing.GetRoom(Context.Channel);
             room.UpdateMinutes = value;
@@ -429,7 +429,7 @@ namespace WowCurrencyManager.Modules
         public async Task Order(int value)
         {
             await Context.Channel.DeleteMessageAsync(Context.Message);
-            var routing = FarmRoomRouting.GetRoomRouting();
+            var routing = FarmRoomManager.GetRoomRouting();
 
             var room = routing.GetRoom(Context.Channel);
 

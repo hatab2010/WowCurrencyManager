@@ -12,8 +12,6 @@ namespace WowCurrencyManager
 {
     public static class Extensions
     {
-        static int _time;
-
         public static string FirstCharUp(this string input)
         {
             switch (input)

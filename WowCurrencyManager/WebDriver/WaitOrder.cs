@@ -54,7 +54,7 @@ namespace WowCurrencyManager.WebDriver
                 var newOrders = driver.FindElements(By.ClassName("sales-history__table-row-unread"));
 
                 //Check for room exist
-                var root = FarmRoomRouting.GetRoomRouting();
+                var root = FarmRoomManager.GetRoomRouting();
 
 
 

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace WowCurrencyManager.Room
 {
+    [Serializable]
     public abstract class ClientBase
     {
         public string Name { protected set; get; }

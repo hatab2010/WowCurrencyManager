@@ -2,8 +2,10 @@
 using Discord.Rest;
 using Discord.WebSocket;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,44 +13,53 @@ using WowCurrencyManager.Model;
 
 namespace WowCurrencyManager.Room
 {
+    [Serializable]
+    public class FarmRoomData
+    {
+        public List<RoomClient> _clients = new List<RoomClient>();
+        public decimal _minLos;
+        public int _balance;
+        public ulong _channelId;
+        public ulong _guildId;
+    }
+
+    [Serializable]
     public class FarmRoom : RoomBase
     {
-        public static Action<FarmRoom> Changed;        
+        public static Action<FarmRoom> Changed;
+
+        private const int MIN_BALANS = 400;
+
         public string Server => Regex.Replace(Name.Split('-')[0], "[_]", " ").ToLower();
         public string Fraction => Channel.Name.Split('-')[2].ToLower();
-        public string WordPart => Channel.Name.Split('-')[1].ToLower();        
+        public string WordPart => Channel.Name.Split('-')[1].ToLower();
+
+        #region propperty
+        public FarmRoomData Cash { private set; get; }
+
         public decimal MinLos 
         { 
-            get => _minLos;
+            get => Cash._minLos;
             private set 
             { 
-                if (_minLos != value)
+                if (Cash._minLos != value)
                 {
                     Changed?.Invoke(this);
                 }
-                _minLos = value; 
+                Cash._minLos = value;
+                var rm = FarmRoomManager.GetRoomRouting();
+                rm.SaveCashRooms();
             }
         }
-        public int UpdateMinutes = 30;
-        private G2gOrder _order;
-        private Stopwatch _lLastUpdate;
-        private decimal _minLos;
-        private const int MIN_BALANS = 400;
 
-        public int Balance
+        internal void SetCash(FarmRoomData item)
         {
-            get => _balance;
-            private set
-            {
-                if (_balance != value)
-                {
-                    _lLastUpdate.Restart();
-                    _balance = value;
-                }
-            }
+            Cash._minLos = item._minLos;
+            Cash._balance = item._balance;
+            Cash._clients = item._clients;
         }
 
-        public RestUserMessage LastBalanceMessage { get; internal set; }
+        private G2gOrder _order;
         public G2gOrder Order
         {
             get => _order;
@@ -66,10 +77,38 @@ namespace WowCurrencyManager.Room
             }
         }
 
+        public int Balance
+        {
+            get => Cash._balance;
+            private set
+            {
+                if (Cash._balance != value)
+                {
+                    _lLastUpdate.Restart();
+                    Cash._balance = value;
+                    var rm = FarmRoomManager.GetRoomRouting();
+                    rm.SaveCashRooms();
+                }
+            }
+        }
+        #endregion
+
+        public int UpdateMinutes = 30;
+        
+        private Stopwatch _lLastUpdate;       
+
+        public RestUserMessage LastBalanceMessage { get; internal set; }
+
         public bool IsOperationAllowed { private set; get; } = true;
 
         public FarmRoom(ISocketMessageChannel channel)
         {
+            Cash = new FarmRoomData()
+            {
+                _channelId = channel.Id,
+                _guildId = ((SocketGuildChannel)channel).Guild.Id
+            };
+
             _lLastUpdate = new Stopwatch();
             _lLastUpdate.Start();
             Task.Run(WathToUpdate);
@@ -107,7 +146,7 @@ namespace WowCurrencyManager.Room
 
         public RoomClient GetClient(IUser user)
         {
-            RoomClient client = Clients.FirstOrDefault(_ => _.Id == user.Id);
+            RoomClient client = Cash._clients.FirstOrDefault(_ => _.Id == user.Id);
 
             if (client == null)
             {
@@ -119,7 +158,7 @@ namespace WowCurrencyManager.Room
                 }
 
                 client = new RoomClient(user.Id, user.Username, avatar);
-                Clients.Add(client);
+                Cash._clients.Add(client);
                 return client;
             }
             else
@@ -135,10 +174,10 @@ namespace WowCurrencyManager.Room
 
         public void RemoveClient(ulong id)
         {
-            var client = Clients.FirstOrDefault(_ => _.Id == id);
+            var client = Cash._clients.FirstOrDefault(_ => _.Id == id);
 
             if (client == null) return;
-            Clients.Remove(client);
+            Cash._clients.Remove(client);
 
             UpdateBalance();
             SendBalanceMessage().Wait();
@@ -151,7 +190,7 @@ namespace WowCurrencyManager.Room
 
         public void RemoveAll()
         {
-            Clients.Clear();
+            Cash._clients.Clear();
 
             IsOperationAllowed = true;
             UpdateBalance();
@@ -162,14 +201,14 @@ namespace WowCurrencyManager.Room
         {
             int result = 0;
 
-            if ((Clients == null || Clients.Count == 0) && Balance != 0)
+            if ((Cash._clients == null || Cash._clients.Count == 0) && Balance != 0)
             {
                 Balance = 0;
                 Changed?.Invoke(this);
                 return;
             }
 
-            result = Clients.Sum(_ => _.Balance);
+            result = Cash._clients.Sum(_ => _.Balance);
 
             if (!IsOperationAllowed)
                 return;
@@ -207,14 +246,14 @@ namespace WowCurrencyManager.Room
             builder.WithTitle($"Баланс {Server.FirstCharUp()} [{WordPart.ToUpper()}] {Fraction.FirstCharUp()}");
             //builder.WithThumbnailUrl("https://cdn.discordapp.com/attachments/739498423958372362/743083086945714176/hideaway-logo-final-flat-max.jpg");
 
-            foreach (var item in Clients)
+            foreach (var item in Cash._clients)
             {
                 builder.AddField(item.Name, item.Balance, true);
             }
 
             builder.AddField("Общий баланс", Balance, false);
 
-            if (Balance != Clients.Sum(_ => _.Balance))
+            if (Balance != Cash._clients.Sum(_ => _.Balance))
             {
                 builder.WithDescription("Скорректируйте балансы ваших кошельков");
                 builder.WithColor(Color.Red);

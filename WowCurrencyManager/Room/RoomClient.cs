@@ -1,5 +1,8 @@
-﻿namespace WowCurrencyManager.Room
+﻿using System;
+
+namespace WowCurrencyManager.Room
 {
+    [Serializable]
     public class RoomClient : ClientBase
     {        
         public string AvatarUrl { private set; get; }        

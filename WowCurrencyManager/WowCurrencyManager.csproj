@@ -103,7 +103,7 @@
     <Compile Include="Room\PurseBase.cs" />
     <Compile Include="Room\RoomBase.cs" />
     <Compile Include="Room\RoomClient.cs" />
-    <Compile Include="Room\RoomRouting.cs" />
+    <Compile Include="Room\FarmRoomManager.cs" />
     <Compile Include="WebDriver\EditOrderOperaion.cs" />
     <Compile Include="Global.cs" />
     <Compile Include="WebDriver\IOperation.cs" />
