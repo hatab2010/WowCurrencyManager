@@ -5,6 +5,7 @@ namespace WowCurrencyManager.Model
 {
     public class G2gOrder
     {
+        public FarmRoom RoomSender;
         public bool IsCansel = false;
         public ulong OrderMessageId;
         public string OrderId;
@@ -12,6 +13,7 @@ namespace WowCurrencyManager.Model
         public string Fraction;
         public int Amount;
         public string Buyer;
+        public string OrderPage;
         public RoomClient Performer;
 
         public void SetPerformer(RoomClient performer)

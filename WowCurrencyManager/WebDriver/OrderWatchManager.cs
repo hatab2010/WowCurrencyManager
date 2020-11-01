@@ -24,7 +24,9 @@ namespace WowCurrencyManager.WebDriver
         {
             if (_instance == null)
             {
-                return new OrderWatchManager();
+                var manager = new OrderWatchManager();
+                _instance = manager;
+                return manager;
             }
             else
             {
@@ -42,6 +44,14 @@ namespace WowCurrencyManager.WebDriver
             lock (_opertions)
             {
                 _opertions.Add(new WaitOrder());
+            }
+        }
+
+        public static void AddOperation(IOperation operation)
+        {
+            lock (_instance._opertions)
+            {
+                _instance._opertions.Add(operation);
             }
         }
     }

@@ -17,8 +17,7 @@ namespace WowCurrencyManager.Modules
     [RequireGuild("Финансы")]
     [RequireBotPermission(ChannelPermission.ManageMessages)]
     public class FinanceCommands : ModuleBase<SocketCommandContext>
-    {
-        
+    {        
         [Command("pay")]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task Pay()
@@ -223,6 +222,16 @@ namespace WowCurrencyManager.Modules
 
     public class ForAllCommands : ModuleBase<SocketCommandContext>
     {
+        [Command("init")]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
+        [RequireUserPermission(GuildPermission.Administrator)]
+
+        public async Task init()
+        {
+            var roomManager = FarmRoomManager.GetRoomRouting();
+            roomManager.LoadCashRooms(Context.Client);
+        }
+
         [Command("clear")]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         public async Task Clear()
@@ -306,15 +315,16 @@ namespace WowCurrencyManager.Modules
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [RequireUserPermission(GuildPermission.Administrator)]
 
-        public async Task Cancel()
+        public async Task Cancel(string orderId)
         {
             var routing = FarmRoomManager.GetRoomRouting();
             var room = routing.GetRoom(Context.Channel);
-
-            if (room.Order != null)
+            var curOrder = room.Orders.FirstOrDefault(_ => _.OrderId == "orderId");
+            if (curOrder != null)
             {
-                room.Order.IsCansel = true;
-                await Context.Channel.DeleteMessageAsync(room.Order.OrderMessageId);
+                curOrder.IsCansel = true;
+                await Context.Channel.DeleteMessageAsync(curOrder.OrderMessageId);
+                room.Orders.Remove(curOrder);
             }
         }
 
@@ -339,7 +349,7 @@ namespace WowCurrencyManager.Modules
             await Context.Channel.DeleteMessageAsync(Context.Message);
             var routing = FarmRoomManager.GetRoomRouting();
             var room = routing.GetRoom(Context.Channel);
-            var selectClient = room.Cash._clients.FirstOrDefault(_ => _.Name == username);
+            var selectClient = room.Cash.Clinets.FirstOrDefault(_ => _.Name == username);
             
             if (selectClient == null)
             {
@@ -441,7 +451,7 @@ namespace WowCurrencyManager.Modules
                 Server = "Benediction [US] Alliance"
             };
 
-            room.SetOrder(order);
+            room.AddOrder(order);
 
             Emoji react = new Emoji("💰");
             var message = await Context.Channel.SendMessageAsync("", false, order.GetOrderEmbed());

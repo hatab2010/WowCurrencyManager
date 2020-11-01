@@ -36,7 +36,8 @@ namespace WowCurrencyManager.Room
             {
                 try
                 {
-                    var channel = client.GetGuild(item._guildId).GetTextChannel(item._channelId);
+                    var guild = client.GetGuild(item.guildId);
+                    var channel = client.GetGuild(item.guildId).GetTextChannel(item.ChannelId);
                     var room = GetRoom(channel);
                     room.SetCash(item);
                 }
@@ -58,7 +59,7 @@ namespace WowCurrencyManager.Room
                 using (Stream stream = File.Open(_cashPath, FileMode.Create))
                 {
                     var formater = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                    formater.Serialize(stream, roomsData);
+                    formater.Serialize(stream, roomsData.ToList());
                     stream.Close();
                 }
             }

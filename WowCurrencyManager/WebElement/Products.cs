@@ -112,7 +112,7 @@ namespace WowCurrencyManager.WebElement
         public void SetPrice(decimal value)
         {
             Interaction((el) =>
-            {
+            {                
                 var priceButton = el.FindElement(By.ClassName("g2g_products_price"));
                 priceButton.Click();
 
@@ -120,7 +120,7 @@ namespace WowCurrencyManager.WebElement
                 input.Clear();
                 
                 input.SendKeys((value).ToString().Replace(",", "."));
-                _driver.FindElement(By.CssSelector(".btn.btn--green.editable-submit")).Click();
+                _driver.FindElement(By.CssSelector(".btn.btn--green.editable-submit")).Click();                
             });
         }
 

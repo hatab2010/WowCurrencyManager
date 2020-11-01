@@ -92,11 +92,6 @@ namespace WowCurrencyManager.WebDriver
                 }
             }
 
-            Console.WriteLine(priceEl.Text);
-            Console.WriteLine(Decimal.Parse(Regex.Match(priceEl.Text, @"\d*[.]\d*").Value,
-                NumberStyles.Currency,
-                CultureInfo.InvariantCulture));
-
             var lowPriceVlue = Decimal.Parse(Regex.Match(priceEl.Text, @"\d*[.]\d*").Value,
                 NumberStyles.Currency,
                 CultureInfo.InvariantCulture);
@@ -120,14 +115,22 @@ namespace WowCurrencyManager.WebDriver
             if (order == null)
                 return;
 
+            Console.WriteLine($"Tine: {DateTime.UtcNow}\n" +
+                $"Server: {Sender.Server} \n" +
+                $"Minimal price in G2G: {lowPriceVlue} \n" +
+                $"Current min los: {Sender.MinLos}");
+           
+            var ms = "Set minimal price: ";
             if (lowPriceVlue > Sender.MinLos)
-            {
+            {               
                 var result = lowPriceVlue - (decimal)0.00001;
                 order.SetPrice(result);
+                Console.WriteLine(ms + result);
             }
             else
             {
                 order.SetPrice(Sender.MinLos);
+                Console.WriteLine(ms + Sender.MinLos);
             }
 
             Thread.Sleep(2000);

@@ -16,18 +16,17 @@ namespace WowCurrencyManager.Room
     [Serializable]
     public class FarmRoomData
     {
-        public List<RoomClient> _clients = new List<RoomClient>();
-        public decimal _minLos;
-        public int _balance;
-        public ulong _channelId;
-        public ulong _guildId;
+        public List<RoomClient> Clinets = new List<RoomClient>();
+        public decimal MinLos;
+        public int Balance;
+        public ulong ChannelId;
+        public ulong guildId;
     }
 
     [Serializable]
     public class FarmRoom : RoomBase
     {
         public static Action<FarmRoom> Changed;
-
         private const int MIN_BALANS = 400;
 
         public string Server => Regex.Replace(Name.Split('-')[0], "[_]", " ").ToLower();
@@ -39,14 +38,14 @@ namespace WowCurrencyManager.Room
 
         public decimal MinLos 
         { 
-            get => Cash._minLos;
+            get => Cash.MinLos;
             private set 
             { 
-                if (Cash._minLos != value)
+                if (Cash.MinLos != value)
                 {
                     Changed?.Invoke(this);
                 }
-                Cash._minLos = value;
+                Cash.MinLos = value;
                 var rm = FarmRoomManager.GetRoomRouting();
                 rm.SaveCashRooms();
             }
@@ -54,38 +53,23 @@ namespace WowCurrencyManager.Room
 
         internal void SetCash(FarmRoomData item)
         {
-            Cash._minLos = item._minLos;
-            Cash._balance = item._balance;
-            Cash._clients = item._clients;
+            Cash.MinLos = item.MinLos;
+            Cash.Balance = item.Balance;
+            Cash.Clinets = item.Clinets;
         }
 
-        private G2gOrder _order;
-        public G2gOrder Order
-        {
-            get => _order;
-            private set
-            {
-                if (value != _order)
-                {
-                    if (value != null)
-                    {
-                        SendOrderInChannle(value);
-                    }
 
-                    _order = value;
-                }
-            }
-        }
+        public List<G2gOrder> Orders = new List<G2gOrder>();
 
         public int Balance
         {
-            get => Cash._balance;
+            get => Cash.Balance;
             private set
             {
-                if (Cash._balance != value)
+                if (Cash.Balance != value)
                 {
                     _lLastUpdate.Restart();
-                    Cash._balance = value;
+                    Cash.Balance = value;
                     var rm = FarmRoomManager.GetRoomRouting();
                     rm.SaveCashRooms();
                 }
@@ -105,8 +89,8 @@ namespace WowCurrencyManager.Room
         {
             Cash = new FarmRoomData()
             {
-                _channelId = channel.Id,
-                _guildId = ((SocketGuildChannel)channel).Guild.Id
+                ChannelId = channel.Id,
+                guildId = ((SocketGuildChannel)channel).Guild.Id
             };
 
             _lLastUpdate = new Stopwatch();
@@ -146,7 +130,7 @@ namespace WowCurrencyManager.Room
 
         public RoomClient GetClient(IUser user)
         {
-            RoomClient client = Cash._clients.FirstOrDefault(_ => _.Id == user.Id);
+            RoomClient client = Cash.Clinets.FirstOrDefault(_ => _.Id == user.Id);
 
             if (client == null)
             {
@@ -158,7 +142,7 @@ namespace WowCurrencyManager.Room
                 }
 
                 client = new RoomClient(user.Id, user.Username, avatar);
-                Cash._clients.Add(client);
+                Cash.Clinets.Add(client);
                 return client;
             }
             else
@@ -174,23 +158,23 @@ namespace WowCurrencyManager.Room
 
         public void RemoveClient(ulong id)
         {
-            var client = Cash._clients.FirstOrDefault(_ => _.Id == id);
+            var client = Cash.Clinets.FirstOrDefault(_ => _.Id == id);
 
             if (client == null) return;
-            Cash._clients.Remove(client);
+            Cash.Clinets.Remove(client);
 
             UpdateBalance();
             SendBalanceMessage().Wait();
         }
 
-        public void SetOrder(G2gOrder order)
+        public void AddOrder(G2gOrder order)
         {
-            Order = order;
+            Orders.Add(order);
         }        
 
         public void RemoveAll()
         {
-            Cash._clients.Clear();
+            Cash.Clinets.Clear();
 
             IsOperationAllowed = true;
             UpdateBalance();
@@ -201,14 +185,14 @@ namespace WowCurrencyManager.Room
         {
             int result = 0;
 
-            if ((Cash._clients == null || Cash._clients.Count == 0) && Balance != 0)
+            if ((Cash.Clinets == null || Cash.Clinets.Count == 0) && Balance != 0)
             {
                 Balance = 0;
                 Changed?.Invoke(this);
                 return;
             }
 
-            result = Cash._clients.Sum(_ => _.Balance);
+            result = Cash.Clinets.Sum(_ => _.Balance);
 
             if (!IsOperationAllowed)
                 return;
@@ -246,14 +230,14 @@ namespace WowCurrencyManager.Room
             builder.WithTitle($"Баланс {Server.FirstCharUp()} [{WordPart.ToUpper()}] {Fraction.FirstCharUp()}");
             //builder.WithThumbnailUrl("https://cdn.discordapp.com/attachments/739498423958372362/743083086945714176/hideaway-logo-final-flat-max.jpg");
 
-            foreach (var item in Cash._clients)
+            foreach (var item in Cash.Clinets)
             {
                 builder.AddField(item.Name, item.Balance, true);
             }
 
             builder.AddField("Общий баланс", Balance, false);
 
-            if (Balance != Cash._clients.Sum(_ => _.Balance))
+            if (Balance != Cash.Clinets.Sum(_ => _.Balance))
             {
                 builder.WithDescription("Скорректируйте балансы ваших кошельков");
                 builder.WithColor(Color.Red);
@@ -294,22 +278,23 @@ namespace WowCurrencyManager.Room
             }
         }
 
-        public async void OrderAccept()
+        public async void OrderAccept(G2gOrder order)
         {
-            var operationResult = Order.Performer.Balance - Order.Amount;
-            Balance -= Order.Amount;
+            var operationResult = order.Performer.Balance - order.Amount;
+            Balance -= order.Amount;
 
             if (operationResult >= 0)
             {
                 IsOperationAllowed = true;
-                Order.Performer.SetGoldAmount(operationResult);
+                order.Performer.SetGoldAmount(operationResult);
             }
             else
             {
                 IsOperationAllowed = false;
-                Order.Performer.SetGoldAmount(0);
+                order.Performer.SetGoldAmount(0);
             }
 
+            Orders.Remove(order);
             await SendBalanceMessage();
         }
     }

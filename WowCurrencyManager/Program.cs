@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -31,24 +31,34 @@ namespace WowCurrencyManager
         private IServiceProvider _services;
 
         public async Task RunBotAsync()
-        {            
-            WebManager.InitManager();           
+        {
+            WebManager.InitManager();
 
-            _client = new DiscordSocketClient();
-            _commands = new CommandService();
-                   
+            var _config = new DiscordSocketConfig { MessageCacheSize = 100 };
+            _client = new DiscordSocketClient(_config);
+            _commands = new CommandService();                   
             _services = new ServiceCollection()             
                 .AddSingleton(_client)
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
-
+            
             string token = "";
 
             _client.Log += _client_Log;
+            _client.Ready += OnReady;
+
             await RegisterCommandsAsync();
             await _client.LoginAsync(TokenType.Bot, token);
-            await _client.StartAsync();
+            await _client.StartAsync();           
+
+            
             await Task.Delay(-1);
+        }
+
+        private async Task OnReady()
+        {
+            var manager = FarmRoomManager.GetRoomRouting();
+            manager.LoadCashRooms(_client);
         }
 
         private Task _client_Log(LogMessage arg)
@@ -58,7 +68,7 @@ namespace WowCurrencyManager
         }
 
         public async Task RegisterCommandsAsync()
-        {
+        {            
             _client.MessageReceived += HandleCommandAsync;
             _client.ReactionAdded += HandleReactionAddedAsync;
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
@@ -71,23 +81,31 @@ namespace WowCurrencyManager
         {
             if (arg3.Emote.ToString() != "💰"
                 || arg3.User.Value.IsBot)
-                return Task.CompletedTask;            
+            {
+                Console.WriteLine($"{DateTime.Now}: Order adoption canceled \n" +
+                    $"{arg3.User.Value.Username} is bot");
+                return Task.CompletedTask;
+            };            
 
             var lMessage = arg1.GetOrDownloadAsync();
             lMessage.Wait();
-            var routing = FarmRoomRouting.GetRoomRouting();
-            FarmRoom room = routing.GetRoom(arg2);            
 
-            if (room.Order.Performer != null)
+            var orderId = lMessage.Result.Embeds.FirstOrDefault().Fields.FirstOrDefault(_=>_.Name == "Order").Value;
+            var routing = FarmRoomManager.GetRoomRouting();
+            FarmRoom room = routing.GetRoom(arg2);
+            var curOrder = room.Orders.FirstOrDefault(_ => _.OrderId.Contains(orderId));
+            if (curOrder?.Performer != null)
             {
+                Console.WriteLine($"{DateTime.Now}: Order adoption canceled \n" +
+                    $"Order performer alredy exist");
                 return Task.CompletedTask;
             }
 
-            room.Order.SetPerformer(room.GetClient(arg3.User.Value));
-            lMessage.Result.ModifyAsync(msg => msg.Embed = room.Order.GetOrderEmbed()).Wait();
+            curOrder.SetPerformer(room.GetClient(arg3.User.Value));
+            lMessage.Result.ModifyAsync(msg => msg.Embed = curOrder.GetOrderEmbed()).Wait();
             Thread.Sleep(2000);
             lMessage.Result.RemoveAllReactionsAsync().Wait();
-
+            OrderWatchManager.AddOperation(new AcceptOrder(curOrder));
             return Task.CompletedTask;
         }
 
