@@ -115,6 +115,10 @@ namespace WowCurrencyManager.WebDriver
             if (order == null)
                 return;
 
+            order.SetAmount(Sender.Balance);
+            Thread.Sleep(2000);
+            driver.WaitAjaxFinish();
+
             Console.WriteLine($"Tine: {DateTime.UtcNow}\n" +
                 $"Server: {Sender.Server} \n" +
                 $"Minimal price in G2G: {lowPriceVlue} \n" +
@@ -132,10 +136,9 @@ namespace WowCurrencyManager.WebDriver
                 order.SetPrice(Sender.MinLos);
                 Console.WriteLine(ms + Sender.MinLos);
             }
+            Thread.Sleep(4000);
+            driver.WaitAjaxFinish();
 
-            Thread.Sleep(2000);
-            order.SetAmount(Sender.Balance);            
-            
             void selectOption(IWebElement handler, string selectItem)
             {
                 var curServer = Regex.Replace(handler.Text, "[’]", "");

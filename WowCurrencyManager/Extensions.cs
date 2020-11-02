@@ -22,6 +22,18 @@ namespace WowCurrencyManager
             }
         }
 
+        public static void WaitAjaxFinish(this IWebDriver driver)
+        {
+            var js = (IJavaScriptExecutor)driver;
+
+            while (true)
+            {
+                var ajaxCompleted = (bool)js.ExecuteScript("return jQuery.active == 0");
+                Thread.Sleep(300);
+                if (ajaxCompleted) break;
+            }           
+        }
+
         public static IWebElement WaitElement(this IWebDriver driver, By findeOption)
         {
             var timer = 15000;
