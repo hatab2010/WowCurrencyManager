@@ -74,39 +74,36 @@ namespace WowCurrencyManager
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
         }
 
-        private Task HandleReactionAddedAsync(
+        private async Task HandleReactionAddedAsync(
             Cacheable<IUserMessage, ulong> arg1, 
             ISocketMessageChannel arg2, 
             SocketReaction arg3)
         {
-            if (arg3.Emote.ToString() != "💰"
-                || arg3.User.Value.IsBot)
+            var manager = FarmRoomManager.GetRoomRouting();
+            var room = manager.GetRoom(arg2);
+            var user = room.Cash.Clinets.FirstOrDefault(_ => _.Id == arg3.UserId);
+
+            if (arg3.Emote.ToString() != "💰" || user == null)
             {
-                Console.WriteLine($"{DateTime.Now}: Order adoption canceled \n" +
-                    $"{arg3.User.Value.Username} is bot");
-                return Task.CompletedTask;
-            };            
+                return;
+            };
 
-            var lMessage = arg1.GetOrDownloadAsync();
-            lMessage.Wait();
-
-            var orderId = lMessage.Result.Embeds.FirstOrDefault().Fields.FirstOrDefault(_=>_.Name == "Order").Value;
-            var routing = FarmRoomManager.GetRoomRouting();
-            FarmRoom room = routing.GetRoom(arg2);
+            var lMessage = await arg1.GetOrDownloadAsync();
+            var orderId = lMessage.Embeds.FirstOrDefault().Fields.FirstOrDefault(_=>_.Name == "Order").Value;
             var curOrder = room.Orders.FirstOrDefault(_ => _.OrderId.Contains(orderId));
-            if (curOrder?.Performer != null)
+
+            if (curOrder == null && curOrder?.Performer != null)
             {
                 Console.WriteLine($"{DateTime.Now}: Order adoption canceled \n" +
                     $"Order performer alredy exist");
-                return Task.CompletedTask;
+                return;
             }
 
-            curOrder.SetPerformer(room.GetClient(arg3.User.Value));
-            lMessage.Result.ModifyAsync(msg => msg.Embed = curOrder.GetOrderEmbed()).Wait();
+            curOrder.SetPerformer(user);
+            lMessage.ModifyAsync(msg => msg.Embed = curOrder.GetOrderEmbed()).Wait();
             Thread.Sleep(2000);
-            lMessage.Result.RemoveAllReactionsAsync().Wait();
+            await  lMessage.RemoveAllReactionsAsync();
             OrderWatchManager.AddOperation(new AcceptOrder(curOrder));
-            return Task.CompletedTask;
         }
 
         private async Task HandleCommandAsync(SocketMessage arg)
