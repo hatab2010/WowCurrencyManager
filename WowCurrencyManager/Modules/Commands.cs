@@ -59,7 +59,7 @@ namespace WowCurrencyManager.Modules
                 return;
             }
 
-            var client = room.Clients.FirstOrDefault(_ => _.Name == username);
+            var client = room.Clients.FirstOrDefault(_ => _.Name.ToLower().Contains(username.ToLower()));
 
             if (client == null)
             {
@@ -91,7 +91,7 @@ namespace WowCurrencyManager.Modules
             var routing = FinanseRoomRouting.Get();
             var client = routing.Cash.Rooms?
                 .SelectMany(_ => _.Clients)?
-                .FirstOrDefault(_ => _.Name == username);
+                .FirstOrDefault(_ => _.Name.ToLower().Contains(username.ToLower()));
                    
             if (client == null)
             {
@@ -192,12 +192,12 @@ namespace WowCurrencyManager.Modules
 
             var users = await Context.Channel.GetUsersAsync().FlattenAsync();            
 
-            var addedUser = users.FirstOrDefault(_ => _.Username == name);
+            var addedUser = users.FirstOrDefault(_ => _.Username.ToLower().Contains(name.ToLower()));
 
             if (addedUser != null)
             {
                 var room = RouteRoom();
-                var client = room.Clients.ToList().FirstOrDefault(_ => _.Name == addedUser.Username);
+                var client = room.Clients.ToList().FirstOrDefault(_ => _.Name.ToLower().Contains(addedUser.Username.ToLower()));
 
                 var builder = new EmbedBuilder();
                 builder.WithTitle($"{Context.Channel.Name}");
@@ -222,16 +222,6 @@ namespace WowCurrencyManager.Modules
 
     public class ForAllCommands : ModuleBase<SocketCommandContext>
     {
-        [Command("init")]
-        [RequireBotPermission(ChannelPermission.ManageMessages)]
-        [RequireUserPermission(GuildPermission.Administrator)]
-
-        public async Task init()
-        {
-            var roomManager = FarmRoomManager.GetRoomRouting();
-            roomManager.LoadCashRooms(Context.Client);
-        }
-
         [Command("clear")]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         public async Task Clear()
@@ -296,7 +286,7 @@ namespace WowCurrencyManager.Modules
 
             var users = await Context.Channel.GetUsersAsync().FlattenAsync();
 
-            var addedUser = users.FirstOrDefault(_ => _.Username == name);
+            var addedUser = users.FirstOrDefault(_ => _.Username.ToLower().Contains(name.ToLower()));
 
             if (addedUser != null)
             {
@@ -319,7 +309,7 @@ namespace WowCurrencyManager.Modules
         {
             var routing = FarmRoomManager.GetRoomRouting();
             var room = routing.GetRoom(Context.Channel);
-            var curOrder = room.Orders.FirstOrDefault(_ => _.OrderId == "orderId");
+            var curOrder = room.Orders.FirstOrDefault(_ => _.OrderId.Contains(orderId));
             if (curOrder != null)
             {
                 curOrder.IsCansel = true;
@@ -349,7 +339,7 @@ namespace WowCurrencyManager.Modules
             await Context.Channel.DeleteMessageAsync(Context.Message);
             var routing = FarmRoomManager.GetRoomRouting();
             var room = routing.GetRoom(Context.Channel);
-            var selectClient = room.Cash.Clinets.FirstOrDefault(_ => _.Name == username);
+            var selectClient = room.Cash.Clinets.FirstOrDefault(_ => _.Name.ToLower().Contains(username.ToLower()));
             
             if (selectClient == null)
             {
