@@ -126,7 +126,8 @@ namespace WowCurrencyManager.Modules
 
             foreach (var client in clients)
             {
-                str.AppendLine($"Name: {client.Name} - {client.USDBalance} USD");
+                if (client.USDBalance == 0) continue;
+                str.AppendLine($"**{client.Name}**: {client.USDBalance} USD");
             }
 
             await Context.Channel.SendMessageAsync(str.ToString());
