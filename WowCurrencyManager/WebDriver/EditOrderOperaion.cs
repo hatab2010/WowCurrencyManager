@@ -96,6 +96,7 @@ namespace WowCurrencyManager.WebDriver
                 NumberStyles.Currency,
                 CultureInfo.InvariantCulture);
 
+            Sender.LastMinimalPrice = lowPriceVlue;
 
             //Go to the my order page
             switch (worldPart)

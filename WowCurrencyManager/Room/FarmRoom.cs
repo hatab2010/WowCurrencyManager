@@ -21,6 +21,7 @@ namespace WowCurrencyManager.Room
         public int Balance;
         public ulong ChannelId;
         public ulong guildId;
+        public DateTime NextMinimalPriceMessageDate;
     }
 
     [Serializable]
@@ -32,6 +33,7 @@ namespace WowCurrencyManager.Room
         public string Server => Regex.Replace(Name.Split('-')[0], "[_]", " ").ToLower();
         public string Fraction => Channel.Name.Split('-')[2].ToLower();
         public string WordPart => Channel.Name.Split('-')[1].ToLower();
+        public decimal LastMinimalPrice = 0;
 
         #region propperty
         public FarmRoomData Cash { private set; get; }
@@ -56,6 +58,7 @@ namespace WowCurrencyManager.Room
             Cash.MinLos = item.MinLos;
             Cash.Balance = item.Balance;
             Cash.Clinets = item.Clinets;
+            Cash.NextMinimalPriceMessageDate = item.NextMinimalPriceMessageDate;
         }
 
 

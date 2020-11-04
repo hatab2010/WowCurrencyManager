@@ -276,6 +276,36 @@ namespace WowCurrencyManager.Modules
             await room.SendBalanceMessage();
         }
 
+        [Command("price")]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
+        public async Task Price()
+        {
+            await Context.Channel.DeleteMessageAsync(Context.Message);
+            var routing = FarmRoomManager.GetRoomRouting();
+
+            var room = routing.GetRoom(Context.Channel);
+
+            if (DateTime.Now < room.Cash.NextMinimalPriceMessageDate)
+            {               
+                await Context.Channel.SendMessageAsync($"Команда заблокирована до {room.Cash.NextMinimalPriceMessageDate}");
+                return;
+            }
+
+            if (room.LastMinimalPrice == 0)
+            {
+                await Context.Channel.SendMessageAsync("Бот ещё не совершил мониторинг цен");
+            }
+            else
+            {
+                room.Cash.NextMinimalPriceMessageDate = DateTime.Now.AddDays(7);
+                lock (room.Cash)
+                {
+                    FarmRoomManager.GetRoomRouting().SaveCashRooms();
+                }
+                await Context.Channel.SendMessageAsync($"Последняя минимальная ствака {room.LastMinimalPrice}");
+            }
+        }
+
         [Command("add")]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [RequireUserPermission(GuildPermission.Administrator)]
