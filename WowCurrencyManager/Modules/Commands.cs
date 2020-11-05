@@ -113,9 +113,13 @@ namespace WowCurrencyManager.Modules
             await Context.Channel.DeleteMessageAsync(Context.Message);                              
 
             var routing = FinanseRoomRouting.Get();
+            var clients = routing.Cash.Rooms?
+                        .SelectMany(_ => _.Clients);
+
             var client = routing.Cash.Rooms?
                 .SelectMany(_ => _.Clients)?
-                .FirstOrDefault(_ => _.Name.ToLower().Contains(username.ToLower()));
+                .Where(_=>_.Name != null)
+                .FirstOrDefault(_ => _.Name.ToString().ToLower().Contains(username.ToLower()));
                    
             if (client == null)
             {

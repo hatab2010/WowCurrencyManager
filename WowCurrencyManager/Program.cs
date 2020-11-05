@@ -49,10 +49,36 @@ namespace WowCurrencyManager
 
             await RegisterCommandsAsync();
             await _client.LoginAsync(TokenType.Bot, token);
-            await _client.StartAsync();           
+            await _client.StartAsync();
+            Connection();
 
-            
+
             await Task.Delay(-1);
+        }
+
+        public async void Connection()
+        {
+            var connTime = 0;
+            while (true)
+            {
+                if (_client.ConnectionState == ConnectionState.Disconnected)
+                {
+                    connTime++;
+                    if (connTime > 10)
+                    {
+                        // if only we could call the log event method ourselves without compile error.
+                        //await _client.Log.Invoke(new LogMessage(LogSeverity.Info, "Gateway", "Has not been 
+                        //connected for 30 seconds. Assuming deadlock in connector.")).ConfigureAwait(false);
+                        await _client.StartAsync().ConfigureAwait(false);
+                    }
+                }
+                else if (_client.ConnectionState == ConnectionState.Connected)
+                {
+                    connTime = 0;
+                }
+
+                await Task.Delay(1000).ConfigureAwait(false);
+            }
         }
 
         private async Task OnReady()
@@ -89,7 +115,9 @@ namespace WowCurrencyManager
             };
 
             var lMessage = await arg1.GetOrDownloadAsync();
-            var orderId = lMessage.Embeds.FirstOrDefault().Fields.FirstOrDefault(_=>_.Name == "Order").Value;
+            var orderId = lMessage.Embeds.FirstOrDefault()
+                .Fields.FirstOrDefault(_=>_.Name == "Order")
+                .Value;
             var curOrder = room.Orders.FirstOrDefault(_ => _.OrderId.Contains(orderId));
 
             if (curOrder == null && curOrder?.Performer != null)
