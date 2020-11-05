@@ -17,32 +17,45 @@ namespace WowCurrencyManager.Modules
     [RequireGuild("Финансы")]
     [RequireBotPermission(ChannelPermission.ManageMessages)]
     public class FinanceCommands : ModuleBase<SocketCommandContext>
-    {        
+    {
         [Command("pay")]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task Pay()
         {
-            await Context.Message.DeleteAsync();
-            var room = RouteRoom();
-            var clients = room.PayOperation();
 
-            var admins = await GetAdmins();
+            var routing = FinanseRoomRouting.Get();
+            var clients = routing.Cash.Rooms?
+                .SelectMany(_ => _.Clients);
+            var str = new StringBuilder();
 
-            foreach (var item in clients)
+            foreach (var client in clients)
             {
-                var builder = new EmbedBuilder();
-                builder.WithTitle(Context.Channel.Name);
-                builder.WithDescription($"{item.Name} ОПЛАЧЕНО: {item.USDBalance}$");
-
-                foreach (var admin in admins)
-                {
-                    await admin.SendMessageAsync("", false, builder.Build());
-                }
-
-                await Context.Channel.SendMessageAsync("", false, item.PayEmbedBuild());
-                item.RefrashBalance();
-            }       
+                if (client.USDBalance == 0) continue;
+                str.AppendLine($"**{client.Name}**: {client.USDBalance} USD");
+            }            
             
+            await Context.Message.DeleteAsync();
+            await Context.Channel.SendMessageAsync(str.ToString());
+            
+            foreach (var room in routing.Cash.Rooms)
+            {
+                var channel = Context.Guild.GetTextChannel(room.Id);
+
+                foreach (var item in room.Clients)
+                {
+                    try
+                    {
+                        var builder = new EmbedBuilder();
+                        builder.WithTitle(channel.Name);
+                        builder.WithDescription($"{item.Name} ОПЛАЧЕНО: {item.USDBalance}$");
+                        await channel.SendMessageAsync("", false, item.PayEmbedBuild());
+                        item.RefrashBalance();
+                    }
+                    catch (Exception)
+                    {
+                    }                    
+                }
+            }
         }
 
         [Command("set")]
@@ -80,6 +93,17 @@ namespace WowCurrencyManager.Modules
                     .ToList()
                     .Contains(ChannelPermission.ManageChannels)
                     && _.IsBot == false).ToList();
+        }
+        [Command("spam")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task Spam(int value, [Remainder]string username)
+        {
+            await Context.Channel.DeleteMessageAsync(Context.Message);
+
+            for (int i = 0; i < 100; i++)
+            {
+                await Context.Channel.SendMessageAsync("spam");
+            }
         }
 
         [Command("wage")]
@@ -303,7 +327,7 @@ namespace WowCurrencyManager.Modules
                 {
                     FarmRoomManager.GetRoomRouting().SaveCashRooms();
                 }
-                await Context.Channel.SendMessageAsync($"Последняя минимальная ствака {room.LastMinimalPrice}");
+                await Context.Channel.SendMessageAsync($"Текущая ствака {room.LastMinimalPrice}");
             }
         }
 
