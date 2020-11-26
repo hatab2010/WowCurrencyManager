@@ -32,8 +32,11 @@ namespace WowCurrencyManager.Modules
             {
                 if (client.USDBalance == 0) continue;
                 str.AppendLine($"**{client.Name}**: {client.USDBalance} USD");
-            }            
-            
+            }
+
+            var sum = clients.Sum(_ => _.USDBalance);
+            str.AppendLine($"**Всего**: {sum} USD");
+
             await Context.Message.DeleteAsync();
             await Context.Channel.SendMessageAsync(str.ToString());
             
@@ -157,6 +160,9 @@ namespace WowCurrencyManager.Modules
                 if (client.USDBalance == 0) continue;
                 str.AppendLine($"**{client.Name}**: {client.USDBalance} USD");
             }
+
+            var sum = clients.Sum(_ => _.USDBalance);
+            str.AppendLine($"**Всего**: {sum} USD");
 
             await Context.Channel.SendMessageAsync(str.ToString());
         }
