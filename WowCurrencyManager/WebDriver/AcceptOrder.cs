@@ -38,7 +38,7 @@ namespace WowCurrencyManager.WebDriver
 
                 okButton.Click();
 
-                var messageButton = driver.WaitElement(By.XPath("//a[contains(@target, 'g2gcw') and contains(@class, 'list-action__btn-default')]"));
+                var messageButton = driver.WaitElement(By.XPath("//a[contains(@class, 'list-action__btn-default') and contains(@href, 'chat')]"));
                 var chatUrl = messageButton.GetAttribute("href");
                 driver.Navigate().GoToUrl(chatUrl);
 
