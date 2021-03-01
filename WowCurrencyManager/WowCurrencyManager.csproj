@@ -91,6 +91,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bot\Operation\OperationInfo.cs" />
+    <Compile Include="Bot\Pages\Page.cs" />
+    <Compile Include="Bot\Pages\IPage.cs" />
+    <Compile Include="ExceptionModule\ExceptionType.cs" />
+    <Compile Include="ExceptionModule\ExceptionBase.cs" />
+    <Compile Include="ExceptionModule\ExceptionManager.cs" />
+    <Compile Include="ExceptionModule\PageException.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Model\G2gOrder.cs" />
     <Compile Include="Room\DiscordRoom.cs" />
@@ -98,21 +105,23 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Room\FarmRoom.cs" />
+    <Compile Include="Room\FarmRoomData.cs" />
     <Compile Include="Room\FinanceClient.cs" />
     <Compile Include="Room\FinanseRoomRouting.cs" />
     <Compile Include="Room\PurseBase.cs" />
     <Compile Include="Room\RoomBase.cs" />
     <Compile Include="Room\RoomClient.cs" />
     <Compile Include="Room\FarmRoomManager.cs" />
-    <Compile Include="WebDriver\AcceptOrder.cs" />
-    <Compile Include="WebDriver\EditOrderOperaion.cs" />
+    <Compile Include="Bot\Operation\AcceptOrder.cs" />
+    <Compile Include="Bot\Operation\EditOrderOperaion.cs" />
     <Compile Include="Global.cs" />
-    <Compile Include="WebDriver\IOperation.cs" />
-    <Compile Include="WebDriver\ManagerBase.cs" />
-    <Compile Include="WebDriver\OperationBase.cs" />
-    <Compile Include="WebDriver\OrderWatchManager.cs" />
-    <Compile Include="WebDriver\WaitOrder.cs" />
-    <Compile Include="WebDriver\WebManager.cs" />
+    <Compile Include="Bot\Operation\IOperation.cs" />
+    <Compile Include="Bot\ManagerBase.cs" />
+    <Compile Include="Bot\Operation\OperationBase.cs" />
+    <Compile Include="Bot\OrderWatchManager.cs" />
+    <Compile Include="Bot\Operation\WaitOrder.cs" />
+    <Compile Include="Bot\WebManager.cs" />
+    <Compile Include="WebElement\CurrencySwitchElement.cs" />
     <Compile Include="WebElement\PinnedElement.cs" />
     <Compile Include="WebElement\Products.cs" />
   </ItemGroup>

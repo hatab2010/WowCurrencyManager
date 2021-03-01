@@ -1,7 +1,7 @@
 ﻿using OpenQA.Selenium;
 using WowCurrencyManager.Room;
 
-namespace WowCurrencyManager.WebDriver
+namespace WowCurrencyManager.Bot
 {
     public interface IOperation
     {
@@ -10,6 +10,6 @@ namespace WowCurrencyManager.WebDriver
 
         //string PassThePage(IWebDriver driver);
 
-        void Start(IWebDriver driver);
+        void Execute(IWebDriver driver);
     }
 }

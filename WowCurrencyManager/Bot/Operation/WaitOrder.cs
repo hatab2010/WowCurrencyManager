@@ -9,9 +9,9 @@ using Discord;
 using OpenQA.Selenium;
 using WowCurrencyManager.Room;
 
-namespace WowCurrencyManager.WebDriver
+namespace WowCurrencyManager.Bot
 {
-    public class WaitOrder : IOperation
+    public class WaitOrderOperation : IOperation
     {
         public static event Action<FarmRoom> OrderFound;
         public static event Action<FarmRoom> OrderCompleted;
@@ -22,7 +22,7 @@ namespace WowCurrencyManager.WebDriver
         public FarmRoom Sender { private set; get; }
         private string _url = "https://www.g2g.com/order/sellOrder?status=5";
 
-        public void Start(IWebDriver driver)
+        public void Execute(IWebDriver driver)
         {
             AsyncStart(driver).Wait();
         }
@@ -62,7 +62,7 @@ namespace WowCurrencyManager.WebDriver
                     {
                         var formatedLabel = Regex
                             .Replace(el.FindElement(By.ClassName("sales-history__product-name"))
-                            .Text.ToLower(), "[’]", "");
+                            .Text.ToLower(), "[’']", "");
 
                         if (formatedLabel.Contains(room.Server)
                             && formatedLabel.Contains(room.Fraction)
@@ -132,30 +132,6 @@ namespace WowCurrencyManager.WebDriver
                     currentRoom.AddOrder(myOrder);
                     currentRoom.SendOrderInChannle(myOrder);
 
-                    /////
-                    //while (myOrder.Performer == null)
-                    //{
-                    //    Thread.Sleep(500);
-
-                    //    if (myOrder.IsCansel == true)
-                    //        throw new Exception("Ордер был отменён");
-                    //}
-
-                    //driver.WaitElement(By.ClassName("trade__field-input")).SendKeys(amount.ToString());
-
-                    //currentRoom.OrderAccept();
-                    //OrderCompleted?.Invoke(currentRoom);
-
-                    //driver.WaitElement(By.CssSelector(".list-action.trade__list-action3 a")).Click();
-                    //var okButton = driver.WaitElement(By.CssSelector(".btn.trade-history__btn"));
-
-                    //while (!okButton.Displayed)
-                    //{
-                    //    Thread.Sleep(300);
-                    //}
-
-                    //okButton.Click();
-
                 }
                 catch (Exception ex)
                 {
@@ -171,38 +147,6 @@ namespace WowCurrencyManager.WebDriver
                     throw;
                 }
 
-                //var messageButton = driver.WaitElement(By.XPath("//a[contains(@target, 'g2gcw') and contains(@class, 'list-action__btn-default')]"));
-                //var chatUrl = messageButton.GetAttribute("href");
-                //driver.Navigate().GoToUrl(chatUrl);
-
-                ////Send message to byer
-                //var messageStr = "hello friend, Gold has been sent" +
-                //    " expect 1 hour and get your order" +
-                //    " please give a good rating and follow me" +
-                //    " we have the fastest delivery and cheaper gold, 200 % safe gold, handmade.We do not buy" +
-                //    " gold on other sites or from other sellers!even if gold is not available, you can write" +
-                //    " to us and we completed your order as soon as possible" +
-                //    " waiting for you again ";
-
-                //var secondMessage = "Hello my dear friend. Gold has been sent, wait an hour. If you like our services, " +
-                //    "please give us a good rating and follow us. Come back soon. Good luck to you";
-
-                //driver.WaitElement(By.TagName("textarea"), 60 * 7);
-
-                //Thread.Sleep(5000);
-
-                //try
-                //{
-                //    driver.FindElement(By.XPath("//span[contains(@class, 'Linkify') and contains(text(), 'Gold has been sent')]"));
-                //    driver.WaitElement(By.TagName("textarea")).SendKeys(secondMessage);
-                //}
-                //catch (Exception)
-                //{
-                //    driver.WaitElement(By.TagName("textarea")).SendKeys(messageStr);
-                //    Thread.Sleep(2000);
-                //}
-
-                //driver.WaitElement(By.TagName("textarea")).SendKeys(Keys.Enter);
             }
             catch (Exception ex)
             {

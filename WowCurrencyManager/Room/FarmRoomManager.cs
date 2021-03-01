@@ -27,7 +27,7 @@ namespace WowCurrencyManager.Room
             return instance;
         }
 
-        public void LoadCashRooms(DiscordSocketClient client)
+        public void Load(DiscordSocketClient client)
         {
             var data = GetFarmRoomData();
             if (data == null) return;
@@ -36,8 +36,15 @@ namespace WowCurrencyManager.Room
             {
                 try
                 {
-                    var guild = client.GetGuild(item.guildId);
-                    var channel = client.GetGuild(item.guildId).GetTextChannel(item.ChannelId);
+                    var guild = client.GetGuild(item.GuildId);
+                    SocketTextChannel channel = null;
+
+                    if (guild == null) continue;
+                    
+                    channel =  client.GetGuild(item.GuildId).GetTextChannel(item.ChannelId);
+
+                    if (channel == null) continue;
+
                     var room = GetRoom(channel);
                     room.SetCash(item);
                 }
@@ -79,10 +86,10 @@ namespace WowCurrencyManager.Room
             return result;
         }
 
-        //TODO убрать создание комнаты. Гет метод неяяно меняет состояние объекта
+        //TODO убрать создание комнаты
         public FarmRoom GetRoom(ISocketMessageChannel channel)
         {
-            var room = Rooms.FirstOrDefault(_ => _.Name == channel.Name);
+            var room = Rooms.FirstOrDefault(_ => channel.Id == _.Cash.ChannelId);
             if (room == null)
             {
                 room = new FarmRoom(channel);

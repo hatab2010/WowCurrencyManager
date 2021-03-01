@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using OpenQA.Selenium;
+using WowCurrencyManager.ExceptionModule;
 using WowCurrencyManager.WebElement;
 
 namespace WowCurrencyManager
@@ -34,30 +35,7 @@ namespace WowCurrencyManager
             }           
         }
 
-        public static IWebElement WaitElement(this IWebDriver driver, By findeOption)
-        {
-            var timer = 15000;
-
-            while (true)
-            {
-                try
-                {
-                    return driver.FindElement(findeOption);
-                }
-                catch (Exception)
-                {
-                    Thread.Sleep(1000);
-                    timer -= 1000;
-
-                    if (timer < 0)
-                    {
-                        throw;
-                    }
-                }
-            }
-        }
-
-        public static IWebElement WaitElement(this IWebDriver driver, By findeOption, int second)
+        public static IWebElement WaitElement(this IWebDriver driver, By findeOption, int second = 15)
         {
             var timer = second * 1000;
 
@@ -67,14 +45,14 @@ namespace WowCurrencyManager
                 {
                     return driver.FindElement(findeOption);
                 }
-                catch (Exception)
+                catch (System.Exception ex)
                 {
                     Thread.Sleep(1000);
                     timer -= 1000;
 
                     if (timer < 0)
                     {
-                        throw;
+                        throw new ExceptionBase(ex, ExceptionType.Default);
                     }
                 }
             }
@@ -87,7 +65,7 @@ namespace WowCurrencyManager
 
         public static string FormatesServerName(this string value)
         {
-            var result = Regex.Replace(value, "[’]", "").ToLower();
+            var result = Regex.Replace(value, "[’']?", "").ToLower();
             return result;
         }
 
@@ -98,7 +76,7 @@ namespace WowCurrencyManager
             {
                 result = new Products(driver, server, fraction);
             }
-            catch (Exception)
+            catch (System.Exception)
             {
                 Console.WriteLine($"Products {server} {fraction} not found in page {driver.Url}");
             }
@@ -110,7 +88,10 @@ namespace WowCurrencyManager
         {
             var overScreenClass = "CustomeOverscreen654687";
             var js = (IJavaScriptExecutor)driver;
-            js.ExecuteScript("var div = document.createElement('div'); div.className = 'CustomeOverscreen654687'; div.setAttribute('style', 'width: 99000px; height: 9999999px; position: absolute; top: 0; left: 0; z-index: 999; background-color: blak; opacity: 0.8'); document.body.prepend(div);");
+            js.ExecuteScript("var div = document.createElement('div'); div.className = " +
+                "'CustomeOverscreen654687'; div.setAttribute('style', 'width: 99000px; " +
+                "height: 9999999px; position: absolute; top: 0; left: 0; z-index: 999; " +
+                "background-color: blak; opacity: 0.8'); document.body.prepend(div);");
             var timer = 0;
 
             while (true)
@@ -121,12 +102,15 @@ namespace WowCurrencyManager
                     Thread.Sleep(500);
                     timer += 500;
 
-                    if (timer > 15000)
+                    if (timer > 20000)
                     {
-                        goto Exception;
+                        driver.Navigate().GoToUrl(driver.Url);
+
+                        if (timer > 40000)
+                            goto Exception;
                     }                        
                 }
-                catch (Exception)
+                catch (System.Exception)
                 {
                     break;
                 }               
@@ -135,7 +119,7 @@ namespace WowCurrencyManager
             return;
 
             Exception:
-             throw new Exception();
+             throw new ExceptionBase($"{driver.Url} адресс недоступен");
         }
 
         public static IReadOnlyCollection<IWebElement> WaitElements(this IWebDriver driver, By findeOption)
@@ -148,14 +132,15 @@ namespace WowCurrencyManager
                 {
                     return driver.FindElements(findeOption);
                 }
-                catch (Exception)
+                catch (System.Exception ex)
                 {
                     Thread.Sleep(1000);
                     timer -= 1000;
 
                     if (timer < 0)
                     {
-                        throw;
+                        throw new ExceptionBase("В заданный интервал не произошла перезагрузка страницы",
+                            ExceptionType.Default);
                     }
                 }
             }

@@ -9,5 +9,6 @@ namespace WowCurrencyManager.Room
     {
         public ISocketMessageChannel Channel { protected set; get; }
         public string Name => Channel.Name;
+        protected string[] _nameParams => Name.Split('-');
     }
 }

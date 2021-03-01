@@ -311,6 +311,34 @@ namespace WowCurrencyManager.Modules
             await room.SendBalanceMessage();
         }
 
+        [Command("farmRoomInfo")]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task farmRoomInfo()
+        {
+            await Context.Channel.DeleteMessageAsync(Context.Message);
+            var routing = FarmRoomManager.GetRoomRouting();
+            StringBuilder builder = new StringBuilder();
+
+            var count = 0;
+            foreach (var room in routing.Rooms)
+            {
+                count++;
+
+                builder.AppendLine($"**{room.Name}**");
+                builder.AppendLine($"Баланс {room.Balance}");
+                builder.AppendLine($"Минимальная ставка {room.Cash.MinLos}");
+                builder.AppendLine($"---------------------");
+
+                if (count > 10)
+                {
+                    await Context.Channel.SendMessageAsync(builder.ToString());
+                    count = 0;
+                    builder.Clear();
+                }
+            }           
+        }
+
         [Command("price")]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         public async Task Price()

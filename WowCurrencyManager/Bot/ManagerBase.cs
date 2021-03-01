@@ -6,8 +6,9 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using System.Diagnostics;
 using System.Threading;
+using WowCurrencyManager.ExceptionModule;
 
-namespace WowCurrencyManager.WebDriver
+namespace WowCurrencyManager.Bot
 {
     public class ManagerBase
     {
@@ -29,7 +30,7 @@ namespace WowCurrencyManager.WebDriver
             _driver.Manage().Timeouts().ImplicitWait = new TimeSpan(15000); //TODO нужно проверить таймы на разрыв соединения
         }
 
-        protected async void Process()
+        protected void Process()
         {
             while (true)
             {
@@ -46,22 +47,30 @@ namespace WowCurrencyManager.WebDriver
 
                         if (curOperation != null)
                         {
-                            var isSuccess = false;
+                            var isFinished = false;
 
                             do
                             {
                                 try
                                 {
-                                    curOperation.Start(_driver);
-                                    isSuccess = true;
+                                    curOperation.Execute(_driver);
+                                    isFinished = true;
                                 }
-                                catch (Exception ex)
+                                catch (ExceptionBase ex)
                                 {
-                                    Task.Delay(15000).Wait();
-                                    RestartValidation();
+                                     
+                                    if (ex.Range == ExceptionType.Constant)
+                                    {
+                                        isFinished = true;
+                                    }
+                                    else
+                                    {
+                                        Task.Delay(15000).Wait();
+                                        RestartValidation();
+                                    }
                                 }
 
-                            } while (!isSuccess);
+                            } while (!isFinished);
 
 
                             lock (_opertions)
@@ -77,12 +86,7 @@ namespace WowCurrencyManager.WebDriver
                         if (_opertions.Count == 0)
                         {
                             Thread.Sleep(3000);
-                        }
-                        
-                        //lock (_opertions)
-                        //{
-                        //    _opertions.Add(new WaitOrder());
-                        //}                       
+                        }                                            
                     }
 
                     if (timer.IsRunning)
@@ -91,10 +95,9 @@ namespace WowCurrencyManager.WebDriver
                         timer.Reset();
                     }
                 }
-                catch (Exception ex)
+                catch (ExceptionBase ex)
                 {
                     RestartValidation();
-                    Console.WriteLine(ex.Message);
                 }
             }
         }

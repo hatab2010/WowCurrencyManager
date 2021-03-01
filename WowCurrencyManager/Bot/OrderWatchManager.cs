@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using WowCurrencyManager.Room;
 using WowCurrencyManager.WebElement;
 
-namespace WowCurrencyManager.WebDriver
+namespace WowCurrencyManager.Bot
 {
     public class OrderWatchManager : ManagerBase
     {
@@ -43,7 +43,7 @@ namespace WowCurrencyManager.WebDriver
         {
             lock (_opertions)
             {
-                _opertions.Add(new WaitOrder());
+                _opertions.Add(new WaitOrderOperation());
             }
         }
 

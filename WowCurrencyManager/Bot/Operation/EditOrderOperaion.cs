@@ -5,55 +5,52 @@ using System.Threading;
 using OpenQA.Selenium;
 using WowCurrencyManager.Room;
 using WowCurrencyManager.WebElement;
+using System.Linq;
+using WowCurrencyManager.Bot.Pages;
+using WowCurrencyManager.ExceptionModule;
+using WowCurrencyManager.Bot.Operation;
 
-namespace WowCurrencyManager.WebDriver
+namespace WowCurrencyManager.Bot
 {
-    public class EditOrderOperaion : IOperation
+    public enum GameVersion
     {
-        public FarmRoom Sender { private set; get; }
+        Classic, Main
+    }
 
+    public class EditOrderOperaion : OperationBase
+    {
         public EditOrderOperaion(FarmRoom room)
         {
             Sender = room;
         }
 
-        public void Start(IWebDriver driver)
+        protected override void DriverAction(IWebDriver driver)
         {
-            //get the sell operation options
-            var name = Sender.Channel.Name;
+            var formatedWordPart = $"[{Sender.WordPart}]".ToLower();
+            var operationInfo = new OperationInfo() {
+                operationType = OperationType.LookOrders,
+                ServerWordPart = Sender.WordPart,
+                WowServerType = Sender.WowServerType
+            };
 
-            var parseStrgs = name.Split('-');
+            var lookOrderPage = Global.DefaultSytePage
+                .FirstOrDefault(_ => _.Eq(operationInfo));
 
-            var worldPart = $"[{parseStrgs[1]}]".ToLower();
-            var fraction = parseStrgs[2].ToLower();
-
-            //Wath the current price
-            switch (worldPart)
+            if (lookOrderPage == null)
             {
-                case "[eu]":
-                    driver.Navigate().GoToUrl("https://www.g2g.com/wow-classic-eu/gold-27815-27817");
-                    break;
-                case "[us]":
-                    driver.Navigate().GoToUrl("https://www.g2g.com/wow-classic-us/gold-27816-27825");
-                    break;
+                throw new PageException(operationInfo);
             }
 
-            var selectCurrency = driver.WaitElement(By.ClassName("header__country-text"));
+            driver.Navigate().GoToUrl(lookOrderPage.Url);
 
-            if (!selectCurrency.Text.ToLower().Contains("us"))
+            var currencyElement = CurrencySwitchElement.Find(driver);
+            if (!currencyElement.Value.ToLower().Contains("us"))
             {
-                selectCurrency.Click();
-                var op = driver.WaitElement(By.XPath("//option[contains(@value, 'USD')]"));
-                op.Click();
-                var save = driver.WaitElement(By.CssSelector(".header__country-btn .btn"));
-                save.Click();
-                Thread.Sleep(150000);
+                currencyElement.SelectCurrency("USD");
             }
-
-            var currentCurrencyLavel = driver.WaitElement(By.ClassName("header__country-text"));
 
             selectOption(driver.WaitElement(By.CssSelector("#select2-server-container")), Sender.Server);
-            selectOption(driver.WaitElement(By.CssSelector("#select2-faction-container")), fraction);
+            selectOption(driver.WaitElement(By.CssSelector("#select2-faction-container")), Sender.Fraction);
 
             var sortetLinkEl = driver.GetPinnedElement(By.CssSelector(".sort__link"));
             sortetLinkEl.Interaction((el) =>
@@ -98,21 +95,23 @@ namespace WowCurrencyManager.WebDriver
 
             Sender.LastMinimalPrice = lowPriceVlue;
 
-            //Go to the my order page
-            switch (worldPart)
+            operationInfo.operationType = OperationType.EditOrder;
+            var editOrderPage = Global.DefaultSytePage
+                .FirstOrDefault(_ => Page.Eq(_, operationInfo));
+
+            if (editOrderPage == null)
             {
-                case "[eu]":
-                    driver.Navigate().GoToUrl(Global.INTERNAL_OREDER_EU);
-                    break;
-                case "[us]":
-                    driver.Navigate().GoToUrl(Global.INTERNAL_ORDER_US);
-                    break;
+                throw new PageException(operationInfo);
             }
+
+            //Go to the my orders page
+            driver.Navigate().GoToUrl(editOrderPage.Url);
+
 
             //Finde room order
             Products order = null;
 
-            order = driver.FindProductEl(Sender.Server, fraction);
+            order = driver.FindProductEl(Sender.Server, Sender.Fraction);
             if (order == null)
                 return;
 
@@ -120,7 +119,7 @@ namespace WowCurrencyManager.WebDriver
             Thread.Sleep(2000);
             driver.WaitAjaxFinish();
 
-            Console.WriteLine($"Tine: {DateTime.UtcNow}\n" +
+            Console.WriteLine($"Time: {DateTime.UtcNow}\n" +
                 $"Server: {Sender.Server} \n" +
                 $"Minimal price in G2G: {lowPriceVlue} \n" +
                 $"Current min los: {Sender.MinLos}");
@@ -142,7 +141,7 @@ namespace WowCurrencyManager.WebDriver
 
             void selectOption(IWebElement handler, string selectItem)
             {
-                var curServer = Regex.Replace(handler.Text, "[’]", "");
+                var curServer = Regex.Replace(handler.Text, "[’']", "");
                 if (!curServer.ToLower().Contains(selectItem))
                 {
                     handler.Click();
@@ -151,7 +150,7 @@ namespace WowCurrencyManager.WebDriver
 
                     foreach (var item in serverListItems)
                     {
-                        var formatedName = Regex.Replace(item.Text, "[’]", "").ToLower();
+                        var formatedName = Regex.Replace(item.Text, "[’']", "").ToLower();
 
                         if (formatedName.Contains(selectItem))
                         {

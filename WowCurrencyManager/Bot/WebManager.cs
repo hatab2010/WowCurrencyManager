@@ -12,7 +12,7 @@ using WowCurrencyManager.Modules;
 using WowCurrencyManager.Room;
 using WowCurrencyManager.WebElement;
 
-namespace WowCurrencyManager.WebDriver
+namespace WowCurrencyManager.Bot
 {
     public class WebManager : ManagerBase
     {

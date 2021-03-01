@@ -9,33 +9,56 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using WowCurrencyManager.Bot;
+using WowCurrencyManager.Bot.Pages;
 using WowCurrencyManager.Model;
 
 namespace WowCurrencyManager.Room
 {
-    [Serializable]
-    public class FarmRoomData
-    {
-        public List<RoomClient> Clinets = new List<RoomClient>();
-        public decimal MinLos;
-        public int Balance;
-        public ulong ChannelId;
-        public ulong guildId;
-        public DateTime NextMinimalPriceMessageDate;
-    }
 
     [Serializable]
     public class FarmRoom : RoomBase
     {
-        public static Action<FarmRoom> Changed;
-        private const int MIN_BALANS = 400;
+        public const string NAME_PATTERN = @"^\S*\s?\S*-\S{2}-\S*-?\S*$";
 
-        public string Server => Regex.Replace(Name.Split('-')[0], "[_]", " ").ToLower();
-        public string Fraction => Channel.Name.Split('-')[2].ToLower();
-        public string WordPart => Channel.Name.Split('-')[1].ToLower();
+        public static Action<FarmRoom> Changed;
+        public string Server => _nameParams[0].ToLower().Replace("_"," ");
+        public string Fraction => _nameParams[2].ToLower();
+        public GameVersion WowServerType
+        {
+            get
+            {
+                GameVersion result = GameVersion.Classic;
+                
+
+                if (_nameParams.Count() == 4)
+                {
+                    result = _nameParams[3].ToLower().Contains("main") ? GameVersion.Main : GameVersion.Classic;
+                }
+
+                return result;
+            }
+        }
+
+        public WorldPart WordPart => (WorldPart) Enum.Parse(typeof(WorldPart), _nameParams[1], true);
+
         public decimal LastMinimalPrice = 0;
 
         #region propperty
+        private int _minBalance
+        {
+            get
+            {
+                if (Channel.Name.Contains("main"))
+                {
+                    return 200;
+                }
+                else
+                {
+                    return 400;
+                }
+            }
+        }
         public FarmRoomData Cash { private set; get; }
 
         public decimal MinLos 
@@ -58,6 +81,8 @@ namespace WowCurrencyManager.Room
             Cash.MinLos = item.MinLos;
             Cash.Balance = item.Balance;
             Cash.Clinets = item.Clinets;
+            Cash.GuildId = item.GuildId;
+            Cash.ChannelId = item.ChannelId;
             Cash.NextMinimalPriceMessageDate = item.NextMinimalPriceMessageDate;
         }
 
@@ -81,7 +106,7 @@ namespace WowCurrencyManager.Room
         #endregion
 
         public int UpdateMinutes = 30;
-        
+
         private Stopwatch _lLastUpdate;       
 
         public RestUserMessage LastBalanceMessage { get; internal set; }
@@ -93,7 +118,7 @@ namespace WowCurrencyManager.Room
             Cash = new FarmRoomData()
             {
                 ChannelId = channel.Id,
-                guildId = ((SocketGuildChannel)channel).Guild.Id
+                GuildId = ((SocketGuildChannel)channel).Guild.Id
             };
 
             _lLastUpdate = new Stopwatch();
@@ -107,7 +132,7 @@ namespace WowCurrencyManager.Room
             while (true)
             {
                 Thread.Sleep(1000);
-                if (_lLastUpdate.ElapsedMilliseconds > UpdateMinutes * 60 * 1000 && Balance > MIN_BALANS)
+                if (_lLastUpdate.ElapsedMilliseconds > UpdateMinutes * 60 * 1000 && Balance > _minBalance)
                 {
                     Changed?.Invoke(this);
                     _lLastUpdate.Restart();
@@ -130,6 +155,8 @@ namespace WowCurrencyManager.Room
 
             return builder.Build();
         }
+
+
 
         public RoomClient GetClient(IUser user)
         {
@@ -230,7 +257,7 @@ namespace WowCurrencyManager.Room
         {
             EmbedBuilder builder = new EmbedBuilder();
 
-            builder.WithTitle($"Баланс {Server.FirstCharUp()} [{WordPart.ToUpper()}] {Fraction.FirstCharUp()}");
+            builder.WithTitle($"Баланс {Server.FirstCharUp()} [{WordPart.ToString().ToUpper()}] {Fraction.FirstCharUp()}");
             //builder.WithThumbnailUrl("https://cdn.discordapp.com/attachments/739498423958372362/743083086945714176/hideaway-logo-final-flat-max.jpg");
 
             foreach (var item in Cash.Clinets)
@@ -299,6 +326,11 @@ namespace WowCurrencyManager.Room
 
             Orders.Remove(order);
             await SendBalanceMessage();
+        }
+
+        public static bool IsMath(string name)
+        {
+            return Regex.IsMatch(name, NAME_PATTERN);
         }
     }
 }

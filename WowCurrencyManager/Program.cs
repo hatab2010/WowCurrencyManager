@@ -14,8 +14,9 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using WowCurrencyManager.Room;
 using Discord.Rest;
-using WowCurrencyManager.WebDriver;
+using WowCurrencyManager.Bot;
 using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace WowCurrencyManager
 {
@@ -41,8 +42,8 @@ namespace WowCurrencyManager
                 .AddSingleton(_client)
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
-            
-            string token = "";
+
+
 
             _client.Log += _client_Log;
             _client.Ready += OnReady;
@@ -84,7 +85,7 @@ namespace WowCurrencyManager
         private async Task OnReady()
         {
             var manager = FarmRoomManager.GetRoomRouting();
-            manager.LoadCashRooms(_client);
+            manager.Load(_client);
         }
 
         private Task _client_Log(LogMessage arg)
@@ -137,9 +138,23 @@ namespace WowCurrencyManager
         private async Task HandleCommandAsync(SocketMessage arg)
         {
             var message = arg as SocketUserMessage;
-            var context = new SocketCommandContext(_client, message);            
+            var context = new SocketCommandContext(_client, message);
 
-            if (message.Author.IsBot) return;            
+            if (message.Author.IsBot) return;
+
+            if (!(message.Channel.Name.ToLower().Equals("minimal") ||
+                message.Channel.Name.ToLower().Equals("wage")))
+            {
+                if (!FarmRoom.IsMath(message.Channel.Name))
+                {
+                    await context.Channel.SendMessageAsync("Вы ввели некорректное название канала. " +
+                        "Проверьте очередность написание аргументом " +
+                        "и отсутствие лишних символов. Формат [server_server]-[ud/eu]-[aliance/horde]-[main/classic]");
+                    return;
+                }
+            }
+
+
 
             int argPos = 0;
 

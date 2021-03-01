@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using WowCurrencyManager.ExceptionModule;
 
 namespace WowCurrencyManager.WebElement
 {
@@ -49,7 +50,7 @@ namespace WowCurrencyManager.WebElement
                     }
 
                     var formatLabel = serverName.FormatesServerName();
-                    var isCurrent = Regex.IsMatch(formatLabel, $@"{_server} \[\w*\] - {_fraction}");
+                    var isCurrent = Regex.IsMatch(formatLabel, $@"{_server.Replace("_", " ")} \[\w*\] - {_fraction}");
 
                     if (isCurrent)
                     {
@@ -63,15 +64,17 @@ namespace WowCurrencyManager.WebElement
                         .FirstOrDefault(_ => _.Text.Contains("Reserved"))
                         .FindElement(By.ClassName("products__description-info"));
 
-                var quantityEl =
 
                 Reserved = int.Parse(reservedEl.Text);
                 Stock = int.Parse(_instance.FindElement(By.ClassName("g2g_actual_quantity")).Text);
                 Title = _instance.FindElement(By.ClassName("products__name")).Text;
             }
-            catch (Exception)
-            {
-
+            catch (ExceptionBase ex)
+            {                
+                throw new ExceptionBase(
+                    $"Нет элементов удовлетворяющих условию '{_server} [\\w*] - {_fraction}'",
+                    ExceptionType.Constant
+                    );
             }
         }
 
@@ -125,8 +128,10 @@ namespace WowCurrencyManager.WebElement
         }
 
         public void SetAmount(int value)
-        {          
-            if (value > 400)
+        {
+            var minStock = int.Parse(_instance.FindElement(By.ClassName("g2g_minimum_quantity")).Text);
+
+            if (value >= minStock)
             {
                 SetStateOrder(true);
 
