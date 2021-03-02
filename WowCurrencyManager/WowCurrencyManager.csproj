@@ -108,7 +108,7 @@
     <Compile Include="Room\FarmRoomData.cs" />
     <Compile Include="Room\FinanceClient.cs" />
     <Compile Include="Room\FinanseRoomRouting.cs" />
-    <Compile Include="Room\PurseBase.cs" />
+    <Compile Include="Room\ClientBase.cs" />
     <Compile Include="Room\RoomBase.cs" />
     <Compile Include="Room\RoomClient.cs" />
     <Compile Include="Room\FarmRoomManager.cs" />
@@ -120,7 +120,7 @@
     <Compile Include="Bot\Operation\OperationBase.cs" />
     <Compile Include="Bot\OrderWatchManager.cs" />
     <Compile Include="Bot\Operation\WaitOrder.cs" />
-    <Compile Include="Bot\WebManager.cs" />
+    <Compile Include="Bot\DriversManager.cs" />
     <Compile Include="WebElement\CurrencySwitchElement.cs" />
     <Compile Include="WebElement\PinnedElement.cs" />
     <Compile Include="WebElement\Products.cs" />
@@ -129,7 +129,12 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\..\TGM\TGM\WebBotCore.csproj">
+      <Project>{de1f4fad-b481-40b1-b311-dfb016a78e6c}</Project>
+      <Name>WebBotCore</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Selenium.WebDriver.ChromeDriver.84.0.4147.3001\build\Selenium.WebDriver.ChromeDriver.targets" Condition="Exists('..\packages\Selenium.WebDriver.ChromeDriver.84.0.4147.3001\build\Selenium.WebDriver.ChromeDriver.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

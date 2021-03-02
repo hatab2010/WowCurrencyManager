@@ -22,7 +22,7 @@ namespace WowCurrencyManager.Bot
             CopyAll(diSource, diTarget);
         }
 
-        public static List<Page> DefaultSytePage = new List<Page>()
+        public static List<Page> DefaultSitePage = new List<Page>()
         {
             new Page()
             {

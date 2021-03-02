@@ -56,7 +56,7 @@ namespace WowCurrencyManager.Modules
                     }
                     catch (Exception)
                     {
-                    }                    
+                    }
                 }
             }
         }

@@ -5,6 +5,10 @@ VisualStudioVersion = 16.0.29926.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WowCurrencyManager", "WowCurrencyManager\WowCurrencyManager.csproj", "{A97CD696-0586-4899-86ED-520B664C2ADA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebBotCore", "..\TGM\TGM\WebBotCore.csproj", "{DE1F4FAD-B481-40B1-B311-DFB016A78E6C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WowCurrencyManager.v2", "WowCurrencyManager.v2\WowCurrencyManager.v2.csproj", "{C11CE022-FA0C-4294-8FF0-9CF06B8E96A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{A97CD696-0586-4899-86ED-520B664C2ADA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A97CD696-0586-4899-86ED-520B664C2ADA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A97CD696-0586-4899-86ED-520B664C2ADA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE1F4FAD-B481-40B1-B311-DFB016A78E6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE1F4FAD-B481-40B1-B311-DFB016A78E6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE1F4FAD-B481-40B1-B311-DFB016A78E6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE1F4FAD-B481-40B1-B311-DFB016A78E6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C11CE022-FA0C-4294-8FF0-9CF06B8E96A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C11CE022-FA0C-4294-8FF0-9CF06B8E96A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C11CE022-FA0C-4294-8FF0-9CF06B8E96A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C11CE022-FA0C-4294-8FF0-9CF06B8E96A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

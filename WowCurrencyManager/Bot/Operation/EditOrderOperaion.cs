@@ -33,7 +33,7 @@ namespace WowCurrencyManager.Bot
                 WowServerType = Sender.WowServerType
             };
 
-            var lookOrderPage = Global.DefaultSytePage
+            var lookOrderPage = Global.DefaultSitePage
                 .FirstOrDefault(_ => _.Eq(operationInfo));
 
             if (lookOrderPage == null)
@@ -96,7 +96,7 @@ namespace WowCurrencyManager.Bot
             Sender.LastMinimalPrice = lowPriceVlue;
 
             operationInfo.operationType = OperationType.EditOrder;
-            var editOrderPage = Global.DefaultSytePage
+            var editOrderPage = Global.DefaultSitePage
                 .FirstOrDefault(_ => Page.Eq(_, operationInfo));
 
             if (editOrderPage == null)

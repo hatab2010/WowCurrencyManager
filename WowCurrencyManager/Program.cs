@@ -33,7 +33,7 @@ namespace WowCurrencyManager
 
         public async Task RunBotAsync()
         {
-            WebManager.InitManager();
+            DriversManager.Init();
 
             var _config = new DiscordSocketConfig { MessageCacheSize = 100 };
             _client = new DiscordSocketClient(_config);
@@ -43,7 +43,7 @@ namespace WowCurrencyManager
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
 
-
+            var token = "NzQzMjQ4MjYwOTQwMTY5MjU3.XzR54g.5mhIDcIIWwEcnklBxJp68Pf8Ta4";
 
             _client.Log += _client_Log;
             _client.Ready += OnReady;
