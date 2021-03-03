@@ -1,9 +1,21 @@
-﻿using Discord.WebSocket;
-using System;
-using System.Collections.Generic;
+﻿using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using Discord.Commands;
+using Discord.WebSocket;
+using Discord;
+
+using System.Net.Http.Headers;
+using System.Reflection;
+using Discord.Rest;
+using System.Threading;
+using System.Text.RegularExpressions;
+using WowCurrencyManager.v2.Model;
+using System;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace WowCurrencyManager.v2
 {
@@ -18,9 +30,11 @@ namespace WowCurrencyManager.v2
         private CommandService _commands;
         private IServiceProvider _services;
 
+        public void InitWebBots() => G2gCore.Init();
+
         public async Task RunBotAsync()
         {
-            DriversManager.Init();
+            G2gCore.Init();
 
             var _config = new DiscordSocketConfig { MessageCacheSize = 100 };
             _client = new DiscordSocketClient(_config);
@@ -30,7 +44,7 @@ namespace WowCurrencyManager.v2
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
 
-            var token = "NzQzMjQ4MjYwOTQwMTY5MjU3.XzR54g.5mhIDcIIWwEcnklBxJp68Pf8Ta4";
+            var token = "NzQzMjQ4MjYwOTQwMTY5MjU3.XzR54g.dZot6OL8kA9jQnm_8hIobfNb0_M";
 
             _client.Log += _client_Log;
             _client.Ready += OnReady;
@@ -71,8 +85,6 @@ namespace WowCurrencyManager.v2
 
         private async Task OnReady()
         {
-            var manager = FarmRoomManager.GetRoomRouting();
-            manager.Load(_client);
         }
 
         private Task _client_Log(LogMessage arg)
@@ -153,4 +165,5 @@ namespace WowCurrencyManager.v2
             }
         }
     }
+
 }

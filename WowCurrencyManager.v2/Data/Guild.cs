@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace WowCurrencyManager.v2.Data
 {
-    class Channel
+    public class Guild
     {
         long Id;
-        long GuildId;
     }
 }
