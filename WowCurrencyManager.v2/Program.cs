@@ -1,21 +1,16 @@
-﻿using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
 using Discord.Commands;
 using Discord.WebSocket;
 using Discord;
-
-using System.Net.Http.Headers;
 using System.Reflection;
-using Discord.Rest;
-using System.Threading;
-using System.Text.RegularExpressions;
 using WowCurrencyManager.v2.Model;
 using System;
 using Microsoft.Extensions.DependencyInjection;
+using WowCurrencyManager.v2.Data;
+using WowCurrencyManager.v2.Modules;
+using System.Collections.Generic;
+using Data;
 
 namespace WowCurrencyManager.v2
 {
@@ -30,11 +25,9 @@ namespace WowCurrencyManager.v2
         private CommandService _commands;
         private IServiceProvider _services;
 
-        public void InitWebBots() => G2gCore.Init();
-
         public async Task RunBotAsync()
         {
-            G2gCore.Init();
+            //G2gCore.Init();
 
             var _config = new DiscordSocketConfig { MessageCacheSize = 100 };
             _client = new DiscordSocketClient(_config);
@@ -44,7 +37,7 @@ namespace WowCurrencyManager.v2
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
 
-            var token = "NzQzMjQ4MjYwOTQwMTY5MjU3.XzR54g.dZot6OL8kA9jQnm_8hIobfNb0_M";
+            var token = "NzQzMjQ4MjYwOTQwMTY5MjU3.XzR54g._ZnLPb0dersJmfnauxNBinyphnE";
 
             _client.Log += _client_Log;
             _client.Ready += OnReady;
@@ -97,7 +90,13 @@ namespace WowCurrencyManager.v2
         {
             _client.MessageReceived += HandleCommandAsync;
             _client.ReactionAdded += HandleReactionAddedAsync;
+            _client.ReactionRemoved += HandleReactionRemovedAsync;
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+        }
+
+        private Task HandleReactionRemovedAsync(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
+        {
+            throw new NotImplementedException();
         }
 
         private async Task HandleReactionAddedAsync(
@@ -105,65 +104,93 @@ namespace WowCurrencyManager.v2
             ISocketMessageChannel arg2,
             SocketReaction arg3)
         {
-            var manager = FarmRoomManager.GetRoomRouting();
-            var room = manager.GetRoom(arg2);
-            var user = room.Cash.Clinets.FirstOrDefault(_ => _.Id == arg3.UserId);
+            Client user = null;
+            Channel channel = null;
 
-            if (arg3.Emote.ToString() != "💰" || user == null)
+            using (var db = new MobileContext())
+            {
+                user = db.Clients.FirstOrDefault(_ => _.Id == arg3.UserId);
+                channel = db.Channels.FirstOrDefault(_ => _.Id == arg2.Id);
+            }
+
+            if (arg3.Emote.ToString() != "💰" 
+                || user == null
+                || channel == null)
             {
                 return;
             };
 
             var lMessage = await arg1.GetOrDownloadAsync();
-            var orderId = lMessage.Embeds.FirstOrDefault()
+            var orderId = ulong.Parse(lMessage.Embeds.FirstOrDefault()
                 .Fields.FirstOrDefault(_ => _.Name == "Order")
-                .Value;
-            var curOrder = room.Orders.FirstOrDefault(_ => _.OrderId.Contains(orderId));
+                .Value);
 
-            if (curOrder == null && curOrder?.Performer != null)
+            Order currentOrder = null;
+
+            using (var db = new MobileContext())
+            {
+                currentOrder = db.Orders.FirstOrDefault(_ => _.Id == orderId);
+            }
+
+            if (currentOrder == null && currentOrder?.Clients != null)
             {
                 Console.WriteLine($"{DateTime.Now}: Order adoption canceled \n" +
                     $"Order performer alredy exist");
                 return;
             }
 
-            curOrder.SetPerformer(user);
-            lMessage.ModifyAsync(msg => msg.Embed = curOrder.GetOrderEmbed()).Wait();
-            Thread.Sleep(2000);
+            currentOrder.SetPerformer(user);
+            lMessage.ModifyAsync(msg => msg.Embed = currentOrder.GetOrderEmbed()).Wait();
             await lMessage.RemoveAllReactionsAsync();
-            OrderWatchManager.AddOperation(new AcceptOrder(curOrder));
+
+            G2gCore.AcceptOrder(currentOrder);
         }
 
         private async Task HandleCommandAsync(SocketMessage arg)
         {
             var message = arg as SocketUserMessage;
             var context = new SocketCommandContext(_client, message);
+            var openDialog = Dialog.OpenDialogs.FirstOrDefault(_ => _.Channel.Id == context.Channel.Id);
+            int argPos = 0;
 
             if (message.Author.IsBot) return;
-
-            if (!(message.Channel.Name.ToLower().Equals("minimal") ||
-                message.Channel.Name.ToLower().Equals("wage")))
+            
+            if (openDialog != null)
             {
-                if (!FarmRoom.IsMath(message.Channel.Name))
+                var FarmRoomDialog = openDialog as RegistrationFarmRoomDialog;
+                if (FarmRoomDialog != null)
                 {
-                    await context.Channel.SendMessageAsync("Вы ввели некорректное название канала. " +
-                        "Проверьте очередность написание аргументом " +
-                        "и отсутствие лишних символов. Формат [server_server]-[ud/eu]-[aliance/horde]-[main/classic]");
-                    return;
+                    try
+                    {
+                        await FarmRoomDialog.SendAnswer(message);
+                    }
+                    catch (Exception ex)
+                    {
+                        await context.Channel.SendMessageAsync(ex.Message);                     
+                    }                    
                 }
-            }
 
-
-
-            int argPos = 0;
+                return;
+            }           
 
             if (message.HasStringPrefix("/", ref argPos))
             {
                 var result = await _commands.ExecuteAsync(context, argPos, _services);
 
-                if (!result.IsSuccess) Console.WriteLine(result.ErrorReason);
+                if (!result.IsSuccess)
+                {                    
+                    Console.WriteLine(result.ErrorReason);
+                }
+                else
+                {
+                    await message.DeleteAsync();
+                }
             }
         }
-    }
 
+        private void RouteCommand()
+        {
+
+        }
+    }
 }

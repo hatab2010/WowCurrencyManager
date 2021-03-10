@@ -1,7 +1,7 @@
 ﻿using WebBotCore.Interfase;
 using WebBotCore.Model;
 
-namespace WowCurrencyManager.v2.Model
+namespace WowCurrencyManager.v2
 {
     public enum WorkerRole
     {

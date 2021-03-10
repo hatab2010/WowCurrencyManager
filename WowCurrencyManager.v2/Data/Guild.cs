@@ -8,6 +8,9 @@ namespace WowCurrencyManager.v2.Data
 {
     public class Guild
     {
-        long Id;
-    }
+        public string Name { set; get; }
+        public ulong Id { set; get; }
+
+        public List<Channel> Channels { set; get; }
+}
 }

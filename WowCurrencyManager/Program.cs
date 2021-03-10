@@ -43,7 +43,7 @@ namespace WowCurrencyManager
                 .AddSingleton(_commands)
                 .BuildServiceProvider();
 
-
+            var token = "";
 
             _client.Log += _client_Log;
             _client.Ready += OnReady;
@@ -153,8 +153,6 @@ namespace WowCurrencyManager
                     return;
                 }
             }
-
-
 
             int argPos = 0;
 
